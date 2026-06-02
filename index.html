@@ -539,26 +539,68 @@ async function downloadSignedPDF(sigId) {
   showToast('מכין PDF...');
   try {
     const { data: sig } = await sbClient.from('signatures').select('*, documents(pdf_url,title,fields)').eq('id', sigId).single();
-    const pdfBytes = await fetch(sig.documents.pdf_url).then(r => r.arrayBuffer());
-    const pdfDoc = await PDFLib.PDFDocument.load(pdfBytes);
-    const pages = pdfDoc.getPages();
-    let fields = []; try { fields = JSON.parse(sig.documents.fields||'[]'); } catch(e){}
-    // Find signature field and embed signature image
-    const sigFields = fields.filter(f => f.type === 'signature');
-    if (sigFields.length > 0 && sig.signature_data) {
-      const sigImg = await pdfDoc.embedPng(sig.signature_data);
-      sigFields.forEach(f => {
-        const page = pages[f.page - 1];
-        if (!page) return;
-        const { width, height } = page.getSize();
-        page.drawImage(sigImg, {
-          x: f.xPct * width,
-          y: height - (f.yPct + f.hPct) * height,
-          width: f.wPct * width,
-          height: f.hPct * height
-        });
+    let docFields = []; try { docFields = JSON.parse(sig.documents.fields||'[]'); } catch(e){}
+    let fieldValues = {}; try { fieldValues = JSON.parse(sig.field_values||'{}'); } catch(e){}
+
+    // Load PDF with pdf.js to render pages as canvas
+    const pdfJsDoc = await pdfjsLib.getDocument(sig.documents.pdf_url).promise;
+    const totalPages = pdfJsDoc.numPages;
+    const pageCanvases = [];
+
+    for (let p = 1; p <= totalPages; p++) {
+      const page = await pdfJsDoc.getPage(p);
+      const viewport = page.getViewport({ scale: 2 });
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      const ctx = canvas.getContext('2d');
+      await page.render({ canvasContext: ctx, viewport }).promise;
+
+      // Draw name fields on this page
+      const nameFields = docFields.filter(f => f.type === 'name' && f.page === p);
+      nameFields.forEach(f => {
+        const idx = docFields.indexOf(f);
+        const val = fieldValues[idx] || sig.signer_name || '';
+        if (!val) return;
+        const x = f.xPct * canvas.width;
+        const y = f.yPct * canvas.height;
+        const w = f.wPct * canvas.width;
+        const h = f.hPct * canvas.height;
+        ctx.font = `${Math.round(h * 0.55)}px Arial`;
+        ctx.fillStyle = '#111';
+        ctx.textBaseline = 'middle';
+        ctx.direction = 'rtl';
+        ctx.fillText(val, x + w, y + h / 2);
       });
+
+      // Draw signature fields on this page
+      const sigFields = docFields.filter(f => f.type === 'signature' && f.page === p);
+      for (const f of sigFields) {
+        const sigData = sig.signature_data;
+        if (!sigData) continue;
+        const img = await new Promise(res => {
+          const i = new Image(); i.onload = () => res(i); i.src = sigData;
+        });
+        const x = f.xPct * canvas.width;
+        const y = f.yPct * canvas.height;
+        const w = f.wPct * canvas.width;
+        const h = f.hPct * canvas.height;
+        ctx.drawImage(img, x, y, w, h);
+      }
+
+      pageCanvases.push(canvas);
     }
+
+    // Build PDF from canvases using pdf-lib
+    const pdfDoc = await PDFLib.PDFDocument.create();
+    for (const canvas of pageCanvases) {
+      const imgData = canvas.toDataURL('image/jpeg', 0.92);
+      const jpgBytes = await fetch(imgData).then(r => r.arrayBuffer());
+      const jpgImg = await pdfDoc.embedJpg(jpgBytes);
+      const page = pdfDoc.addPage([canvas.width, canvas.height]);
+      page.drawImage(jpgImg, { x: 0, y: 0, width: canvas.width, height: canvas.height });
+    }
+
     const out = await pdfDoc.save();
     const blob = new Blob([out], { type: 'application/pdf' });
     const a = document.createElement('a');
