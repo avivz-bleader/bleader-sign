@@ -474,7 +474,7 @@ async function downloadSignedPDF(sigId, docTitle, signerName) {
     const lastPage = pages[pages.length - 1];
     const sigImg = await pdfDoc.embedPng(sig.signature_data);
     lastPage.drawImage(sigImg, { x: 50, y: 50, width: 160, height: 60 });
-    lastPage.drawText(`חתם: ${sig.signer_name}  |  ${new Date(sig.signed_at).toLocaleDateString('he-IL')}`, { x: 50, y: 120, size: 10 });
+    const dateStr = new Date(sig.signed_at).toLocaleDateString('en-GB'); lastPage.drawText('Signed by: ' + sig.signer_name + ' | ' + dateStr, { x: 50, y: 120, size: 10 });
     const out = await pdfDoc.save();
     const blob = new Blob([out], { type: 'application/pdf' });
     const a = document.createElement('a');
