@@ -7,143 +7,94 @@
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
-  :root {
-    --purple: #6B21E8; --purple-light: #9B59F5; --pink: #E040A0;
-    --bg: #0D0B1A; --surface: #16132A; --surface2: #1E1A35;
-    --border: rgba(255,255,255,0.08); --text: #F0EDFF; --muted: #8B86A8;
-    --success: #22D6A0; --warning: #F5A623; --font: 'Heebo', sans-serif;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; direction: rtl; }
-  body::before {
-    content: ''; position: fixed; inset: 0;
-    background: radial-gradient(ellipse 60% 50% at 70% 20%, rgba(107,33,232,0.15) 0%, transparent 60%),
-                radial-gradient(ellipse 40% 40% at 20% 80%, rgba(224,64,160,0.08) 0%, transparent 60%);
-    pointer-events: none; z-index: 0;
-  }
-  .layout { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+:root {
+  --purple:#6B21E8;--purple-light:#9B59F5;--pink:#E040A0;
+  --bg:#0D0B1A;--surface:#16132A;--surface2:#1E1A35;
+  --border:rgba(255,255,255,0.08);--text:#F0EDFF;--muted:#8B86A8;
+  --success:#22D6A0;--warning:#F5A623;--font:'Heebo',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;direction:rtl;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 50% at 70% 20%,rgba(107,33,232,0.15) 0%,transparent 60%),radial-gradient(ellipse 40% 40% at 20% 80%,rgba(224,64,160,0.08) 0%,transparent 60%);pointer-events:none;z-index:0;}
+.layout{display:flex;min-height:100vh;position:relative;z-index:1;}
+.sidebar{width:220px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;padding:1.5rem 1rem;flex-shrink:0;position:fixed;top:0;right:0;height:100vh;z-index:100;}
+.logo{display:flex;align-items:center;gap:10px;padding:0.5rem 0.5rem 2rem;}
+.logo-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--purple),var(--pink));display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;color:white;flex-shrink:0;}
+.logo-text{font-size:16px;font-weight:700;}.logo-sub{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+.nav-section{font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;padding:0 0.5rem;margin:1rem 0 0.5rem;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;color:var(--muted);font-size:14px;transition:all 0.2s;margin-bottom:2px;user-select:none;}
+.nav-item:hover{background:var(--surface2);color:var(--text);}
+.nav-item.active{background:rgba(107,33,232,0.2);color:var(--purple-light);font-weight:500;}
+.nav-item svg{width:18px;height:18px;flex-shrink:0;pointer-events:none;}
+.main{flex:1;margin-right:220px;display:flex;flex-direction:column;}
+.topbar{padding:1.25rem 2rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:rgba(13,11,26,0.9);backdrop-filter:blur(10px);position:sticky;top:0;z-index:10;}
+.topbar h1{font-size:18px;font-weight:700;}.topbar .hint{font-size:12px;color:var(--muted);}
+.content{flex:1;padding:2rem;overflow-y:auto;}
+.page{display:none;}.page.active{display:block;}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.25rem;}
+.stat-label{font-size:12px;color:var(--muted);margin-bottom:8px;}.stat-value{font-size:28px;font-weight:700;}.stat-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.5rem;margin-bottom:1.5rem;}
+.card-title{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px;}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:var(--font);cursor:pointer;transition:all 0.2s;font-weight:500;}
+.btn:hover{border-color:rgba(107,33,232,0.5);background:rgba(107,33,232,0.1);}
+.btn.primary{background:linear-gradient(135deg,var(--purple),var(--pink));border-color:transparent;color:white;}
+.btn.primary:hover{opacity:0.9;transform:translateY(-1px);}
+.btn svg{width:16px;height:16px;pointer-events:none;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:right;color:var(--muted);font-weight:400;padding:8px 12px;border-bottom:1px solid var(--border);font-size:12px;}
+td{padding:12px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:4px 10px;border-radius:99px;font-weight:500;}
+.badge.signed{background:rgba(34,214,160,0.12);color:var(--success);}
+.badge.pending{background:rgba(245,166,35,0.12);color:var(--warning);}
+.progress-wrap{display:flex;align-items:center;gap:10px;}
+.progress-bar{flex:1;height:5px;background:rgba(255,255,255,0.06);border-radius:99px;overflow:hidden;min-width:80px;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--purple),var(--pink));border-radius:99px;}
+.upload-zone{border:1.5px dashed rgba(107,33,232,0.4);border-radius:16px;padding:3.5rem 2rem;text-align:center;cursor:pointer;transition:all 0.2s;}
+.upload-zone:hover{border-color:var(--purple);background:rgba(107,33,232,0.07);}
+.upload-zone .icon{font-size:40px;margin-bottom:12px;}
+.upload-zone h3{font-size:15px;font-weight:600;margin-bottom:6px;}
+.upload-zone p{font-size:13px;color:var(--muted);}
+.link-box{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;}
+.link-box code{flex:1;font-size:12px;color:var(--purple-light);word-break:break-all;}
+.config-box{background:rgba(107,33,232,0.06);border:1px solid rgba(107,33,232,0.2);border-radius:14px;padding:1.25rem;margin-bottom:1.5rem;}
+.config-box h3{font-size:14px;font-weight:600;margin-bottom:1rem;color:var(--purple-light);}
+label{font-size:12px;color:var(--muted);display:block;margin-bottom:5px;}
+input[type=text],input[type=url]{width:100%;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:var(--font);transition:border-color 0.2s;}
+input:focus{outline:none;border-color:var(--purple);}
+.doc-chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-size:12px;}
+.icon-btn{background:none;border:none;cursor:pointer;color:var(--muted);padding:6px;border-radius:6px;transition:all 0.2s;}
+.icon-btn:hover{color:var(--text);background:var(--surface2);}
+.icon-btn svg{width:16px;height:16px;display:block;}
+.warning-bar{background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.25);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--warning);margin-bottom:1.5rem;display:flex;align-items:center;gap:8px;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 20px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px;transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);z-index:999;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.toast .dot{width:8px;height:8px;border-radius:50%;background:var(--success);flex-shrink:0;}
 
-  /* Sidebar */
-  .sidebar {
-    width: 220px; background: var(--surface); border-left: 1px solid var(--border);
-    display: flex; flex-direction: column; padding: 1.5rem 1rem; flex-shrink: 0;
-    position: fixed; top: 0; right: 0; height: 100vh; z-index: 100;
-  }
-  .logo { display: flex; align-items: center; gap: 10px; padding: 0.5rem 0.5rem 2rem; }
-  .logo-icon {
-    width: 36px; height: 36px; border-radius: 10px;
-    background: linear-gradient(135deg, var(--purple), var(--pink));
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 900; font-size: 18px; color: white; flex-shrink: 0;
-  }
-  .logo-text { font-size: 16px; font-weight: 700; }
-  .logo-sub { font-size: 11px; color: var(--muted); font-weight: 300; letter-spacing: 1px; text-transform: uppercase; }
-  .nav-section { font-size: 10px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; padding: 0 0.5rem; margin: 1rem 0 0.5rem; }
-  .nav-item {
-    display: flex; align-items: center; gap: 10px; padding: 10px 12px;
-    border-radius: 10px; cursor: pointer; color: var(--muted); font-size: 14px;
-    transition: all 0.2s; margin-bottom: 2px; user-select: none;
-  }
-  .nav-item:hover { background: var(--surface2); color: var(--text); }
-  .nav-item.active { background: rgba(107,33,232,0.2); color: var(--purple-light); font-weight: 500; }
-  .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; pointer-events: none; }
-
-  /* Main */
-  .main { flex: 1; margin-right: 220px; display: flex; flex-direction: column; }
-  .topbar {
-    padding: 1.25rem 2rem; display: flex; align-items: center; justify-content: space-between;
-    border-bottom: 1px solid var(--border); background: rgba(13,11,26,0.9);
-    backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 10;
-  }
-  .topbar h1 { font-size: 18px; font-weight: 700; }
-  .topbar .hint { font-size: 12px; color: var(--muted); }
-  .content { flex: 1; padding: 2rem; overflow-y: auto; }
-  .page { display: none; }
-  .page.active { display: block; }
-
-  /* Stats */
-  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
-  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem; }
-  .stat-label { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
-  .stat-value { font-size: 28px; font-weight: 700; }
-  .stat-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
-
-  /* Cards */
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem; }
-  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
-  .card-title { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-
-  /* Buttons */
-  .btn {
-    display: inline-flex; align-items: center; gap: 7px; padding: 9px 18px;
-    border-radius: 10px; border: 1px solid var(--border); background: var(--surface2);
-    color: var(--text); font-size: 13px; font-family: var(--font); cursor: pointer;
-    transition: all 0.2s; font-weight: 500;
-  }
-  .btn:hover { border-color: rgba(107,33,232,0.5); background: rgba(107,33,232,0.1); }
-  .btn.primary { background: linear-gradient(135deg, var(--purple), var(--pink)); border-color: transparent; color: white; }
-  .btn.primary:hover { opacity: 0.9; transform: translateY(-1px); }
-  .btn svg { width: 16px; height: 16px; pointer-events: none; }
-
-  /* Table */
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { text-align: right; color: var(--muted); font-weight: 400; padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 12px; }
-  td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
-  tr:last-child td { border-bottom: none; }
-
-  /* Badge */
-  .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; padding: 4px 10px; border-radius: 99px; font-weight: 500; }
-  .badge.signed { background: rgba(34,214,160,0.12); color: var(--success); }
-  .badge.pending { background: rgba(245,166,35,0.12); color: var(--warning); }
-
-  /* Progress */
-  .progress-wrap { display: flex; align-items: center; gap: 10px; }
-  .progress-bar { flex: 1; height: 5px; background: rgba(255,255,255,0.06); border-radius: 99px; overflow: hidden; min-width: 80px; }
-  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--purple), var(--pink)); border-radius: 99px; }
-
-  /* Upload */
-  .upload-zone {
-    border: 1.5px dashed rgba(107,33,232,0.4); border-radius: 16px;
-    padding: 3.5rem 2rem; text-align: center; cursor: pointer; transition: all 0.2s;
-  }
-  .upload-zone:hover { border-color: var(--purple); background: rgba(107,33,232,0.07); }
-  .upload-zone .icon { font-size: 40px; margin-bottom: 12px; }
-  .upload-zone h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
-  .upload-zone p { font-size: 13px; color: var(--muted); }
-
-  /* Link box */
-  .link-box { display: flex; align-items: center; gap: 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; }
-  .link-box code { flex: 1; font-size: 12px; color: var(--purple-light); word-break: break-all; }
-
-  /* Config */
-  .config-box { background: rgba(107,33,232,0.06); border: 1px solid rgba(107,33,232,0.2); border-radius: 14px; padding: 1.25rem; margin-bottom: 1.5rem; }
-  .config-box h3 { font-size: 14px; font-weight: 600; margin-bottom: 1rem; color: var(--purple-light); }
-  label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 5px; }
-  input[type=text], input[type=url] {
-    width: 100%; padding: 9px 12px; background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 8px; color: var(--text); font-size: 13px; font-family: var(--font); transition: border-color 0.2s;
-  }
-  input:focus { outline: none; border-color: var(--purple); }
-
-  .doc-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px; font-size: 12px; }
-  .icon-btn { background: none; border: none; cursor: pointer; color: var(--muted); padding: 6px; border-radius: 6px; transition: all 0.2s; }
-  .icon-btn:hover { color: var(--text); background: var(--surface2); }
-  .icon-btn svg { width: 16px; height: 16px; display: block; }
-
-  .warning-bar { background: rgba(245,166,35,0.1); border: 1px solid rgba(245,166,35,0.25); border-radius: 10px; padding: 10px 14px; font-size: 12px; color: var(--warning); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px; }
-
-  .toast {
-    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px);
-    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-    padding: 12px 20px; font-size: 13px; font-weight: 500;
-    display: flex; align-items: center; gap: 8px;
-    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); z-index: 999;
-  }
-  .toast.show { transform: translateX(-50%) translateY(0); }
-  .toast .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
-
-  pre { background: var(--surface2); border-radius: 10px; padding: 1rem; font-size: 11px; overflow-x: auto; color: var(--muted); line-height: 1.8; }
+/* Field editor */
+.pdf-editor-wrap{position:relative;background:#fff;border-radius:12px;overflow:hidden;margin-bottom:1rem;}
+.pdf-editor-wrap canvas{display:block;}
+.field-overlay{position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;}
+.placed-field{position:absolute;border:2px dashed;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;cursor:move;user-select:none;}
+.placed-field.name{border-color:#6B21E8;background:rgba(107,33,232,0.15);color:#6B21E8;}
+.placed-field.signature{border-color:#E040A0;background:rgba(224,64,160,0.15);color:#E040A0;}
+.placed-field .del-btn{position:absolute;top:-8px;left:-8px;width:18px;height:18px;border-radius:50%;background:#E040A0;color:white;border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;line-height:1;}
+.field-toolbar{display:flex;gap:8px;margin-bottom:1rem;align-items:center;flex-wrap:wrap;}
+.field-btn{padding:8px 16px;border-radius:8px;border:1.5px dashed;background:transparent;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all 0.2s;}
+.field-btn.name{border-color:#6B21E8;color:#9B59F5;}
+.field-btn.name:hover,.field-btn.name.active{background:rgba(107,33,232,0.2);}
+.field-btn.sig{border-color:#E040A0;color:#E040A0;}
+.field-btn.sig:hover,.field-btn.sig.active{background:rgba(224,64,160,0.2);}
+.field-btn.none{border-color:var(--border);color:var(--muted);}
+.field-btn.none:hover{background:var(--surface2);}
+.page-nav{display:flex;align-items:center;gap:10px;margin-bottom:1rem;}
+.page-nav button{padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;font-family:var(--font);font-size:13px;}
+.page-nav button:hover{background:rgba(107,33,232,0.1);}
+.page-nav span{font-size:13px;color:var(--muted);}
+pre{background:var(--surface2);border-radius:10px;padding:1rem;font-size:11px;overflow-x:auto;color:var(--muted);line-height:1.8;}
 </style>
 </head>
 <body>
@@ -151,75 +102,62 @@
   <nav class="sidebar">
     <div class="logo">
       <div class="logo-icon">B</div>
-      <div>
-        <div class="logo-text">BLeader</div>
-        <div class="logo-sub">Sign Portal</div>
-      </div>
+      <div><div class="logo-text">BLeader</div><div class="logo-sub">Sign Portal</div></div>
     </div>
     <div class="nav-section">ניהול</div>
     <div class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-      לוח בקרה
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>לוח בקרה
     </div>
     <div class="nav-item" id="nav-newdoc" onclick="showPage('newdoc')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-      מסמך חדש
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>מסמך חדש
     </div>
     <div class="nav-item" id="nav-docs" onclick="showPage('docs')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-      מסמכים
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>מסמכים
     </div>
     <div class="nav-section">הגדרות</div>
     <div class="nav-item" id="nav-settings" onclick="showPage('settings')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
-      הגדרות Supabase
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>הגדרות Supabase
     </div>
   </nav>
 
   <div class="main">
     <div class="topbar">
-      <div>
-        <h1 id="pageTitle">לוח בקרה</h1>
-        <div class="hint" id="pageHint">צפייה בסטטוס החתימות</div>
-      </div>
+      <div><h1 id="pageTitle">לוח בקרה</h1><div class="hint" id="pageHint">צפייה בסטטוס החתימות</div></div>
       <div style="display:flex;gap:8px;">
         <button class="btn" onclick="refreshData()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-          רענן
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>רענן
         </button>
         <button class="btn primary" onclick="showPage('newdoc')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          מסמך חדש
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>מסמך חדש
         </button>
       </div>
     </div>
-
     <div class="content">
 
       <!-- Dashboard -->
       <div class="page active" id="page-dashboard">
         <div id="configWarning" class="warning-bar" style="display:none">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          יש לקנפג את Supabase בהגדרות לפני השימוש —
-          <span style="cursor:pointer;text-decoration:underline" onclick="showPage('settings')">לחץ כאן</span>
+          ⚠️ יש לקנפג Supabase — <span style="cursor:pointer;text-decoration:underline" onclick="showPage('settings')">לחץ כאן</span>
         </div>
         <div class="stats">
-          <div class="stat-card"><div class="stat-label">מסמכים פעילים</div><div class="stat-value" id="stat-docs">—</div><div class="stat-sub">סה"כ מסמכים</div></div>
-          <div class="stat-card"><div class="stat-label">ממתינים</div><div class="stat-value" id="stat-pending" style="color:var(--warning)">—</div><div class="stat-sub">טרם חתמו</div></div>
-          <div class="stat-card"><div class="stat-label">חתמו</div><div class="stat-value" id="stat-signed" style="color:var(--success)">—</div><div class="stat-sub">חתימות שהתקבלו</div></div>
-          <div class="stat-card"><div class="stat-label">הושלמו</div><div class="stat-value" id="stat-done">—</div><div class="stat-sub">כל החתימות התקבלו</div></div>
+          <div class="stat-card"><div class="stat-label">מסמכים</div><div class="stat-value" id="stat-docs">—</div></div>
+          <div class="stat-card"><div class="stat-label">חתמו</div><div class="stat-value" id="stat-signed" style="color:var(--success)">—</div></div>
+          <div class="stat-card"><div class="stat-label">שדות מוגדרים</div><div class="stat-value" id="stat-fields" style="color:var(--purple-light)">—</div></div>
+          <div class="stat-card"><div class="stat-label">הושלמו</div><div class="stat-value" id="stat-done">—</div></div>
         </div>
         <div class="card">
-          <div class="card-header"><div class="card-title">מסמכים פעילים</div></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+            <div class="card-title">מסמכים פעילים</div>
+          </div>
           <table>
-            <thead><tr><th>מסמך</th><th>תאריך יצירה</th><th>התקדמות</th><th>פעולות</th></tr></thead>
-            <tbody id="docsTableBody"><tr><td colspan="4" style="text-align:center;color:var(--muted);padding:2rem">טוען...</td></tr></tbody>
+            <thead><tr><th>מסמך</th><th>תאריך</th><th>שדות</th><th>חתימות</th><th>פעולות</th></tr></thead>
+            <tbody id="docsTableBody"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:2rem">טוען...</td></tr></tbody>
           </table>
         </div>
         <div class="card">
-          <div class="card-header"><div class="card-title">חתימות שהתקבלו</div></div>
+          <div class="card-title" style="margin-bottom:1.25rem">חתימות שהתקבלו</div>
           <table>
-            <thead><tr><th>שם</th><th>מסמך</th><th>תאריך ושעה</th><th>סטטוס</th><th>הורד PDF</th></tr></thead>
+            <thead><tr><th>שם</th><th>מסמך</th><th>תאריך</th><th>סטטוס</th><th>הורד PDF</th></tr></thead>
             <tbody id="sigsTableBody"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:2rem">טוען...</td></tr></tbody>
           </table>
         </div>
@@ -227,47 +165,83 @@
 
       <!-- New Document -->
       <div class="page" id="page-newdoc">
-        <div class="card">
-          <div class="card-title" style="margin-bottom:1.25rem">העלאת PDF לחתימה</div>
+        <!-- Step 1: Upload -->
+        <div class="card" id="step1Card">
+          <div class="card-title" style="margin-bottom:1.25rem">שלב 1 — העלאת PDF</div>
           <div class="upload-zone" onclick="document.getElementById('pdfInput').click()" id="dropZone">
             <div class="icon">📄</div>
             <h3>גרור PDF לכאן או לחץ לבחירה</h3>
-            <p>הקובץ יועלה ל-Supabase Storage</p>
+            <p>תוכל להגדיר שדות שם וחתימה בשלב הבא</p>
           </div>
           <input type="file" id="pdfInput" accept=".pdf" style="display:none" onchange="handleFileSelect(this)">
         </div>
-        <div class="card" id="docDetailsCard" style="display:none">
-          <div class="card-title" style="margin-bottom:1.25rem">פרטי המסמך</div>
+
+        <!-- Step 2: Field editor -->
+        <div class="card" id="step2Card" style="display:none">
+          <div class="card-title" style="margin-bottom:1rem">שלב 2 — סמן איפה למלא</div>
           <div style="margin-bottom:1rem">
             <label>שם המסמך</label>
-            <input type="text" id="docTitle" placeholder="לדוגמה: חוזה העסקה ינואר 2025">
+            <input type="text" id="docTitle" placeholder="לדוגמה: חוזה העסקה 2025">
           </div>
-          <div style="margin-bottom:1.5rem">
-            <label>תיאור קצר (יופיע לעובד)</label>
-            <input type="text" id="docDesc" placeholder="אנא קרא וחתום על מסמך זה">
+          <div style="margin-bottom:1.25rem">
+            <label>תיאור (יופיע לעובד)</label>
+            <input type="text" id="docDesc" placeholder="אנא קרא וחתום">
           </div>
-          <button class="btn primary" onclick="uploadAndCreate()" id="createBtn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-            צור מסמך וקבל לינק
-          </button>
+
+          <div style="background:rgba(107,33,232,0.06);border:1px solid rgba(107,33,232,0.2);border-radius:12px;padding:1rem;margin-bottom:1rem;font-size:13px;color:var(--muted);line-height:1.8;">
+            <strong style="color:var(--purple-light)">הוראות:</strong><br>
+            1. לחץ על כפתור <strong style="color:#9B59F5">שם</strong> או <strong style="color:#E040A0">חתימה</strong><br>
+            2. לחץ על המקום ב-PDF שאתה רוצה<br>
+            3. גרור לכוונון — לחץ ✕ למחיקה
+          </div>
+
+          <div class="field-toolbar">
+            <button class="field-btn none" id="toolNone" onclick="setTool('none')">🖱️ סמן</button>
+            <button class="field-btn name" id="toolName" onclick="setTool('name')">✏️ הוסף שדה שם</button>
+            <button class="field-btn sig" id="toolSig" onclick="setTool('sig')">✍️ הוסף שדה חתימה</button>
+            <span style="font-size:12px;color:var(--muted);margin-right:auto" id="fieldCount">0 שדות</span>
+          </div>
+
+          <div class="page-nav">
+            <button onclick="prevPage()">→ עמוד קודם</button>
+            <span id="pageIndicator">עמוד 1 מתוך 1</span>
+            <button onclick="nextPage()">עמוד הבא ←</button>
+          </div>
+
+          <div style="position:relative;display:inline-block;width:100%">
+            <div class="pdf-editor-wrap" id="pdfEditorWrap">
+              <canvas id="pdfCanvas"></canvas>
+              <div class="field-overlay" id="fieldOverlay" onclick="handleOverlayClick(event)"></div>
+            </div>
+          </div>
+
+          <div style="margin-top:1.5rem;display:flex;gap:10px;">
+            <button class="btn primary" onclick="uploadAndCreate()" id="createBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              צור מסמך וקבל לינק
+            </button>
+          </div>
         </div>
+
+        <!-- Step 3: Link -->
         <div class="card" id="linkCard" style="display:none">
-          <div class="card-title" style="margin-bottom:1.25rem;color:var(--success)">✅ המסמך נוצר בהצלחה!</div>
-          <p style="font-size:13px;color:var(--muted);margin-bottom:1rem">שלח את הלינק לקבוצת WhatsApp:</p>
+          <div class="card-title" style="margin-bottom:1.25rem;color:var(--success)">✅ המסמך נוצר!</div>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:1rem">שלח ללינק לקבוצת WhatsApp:</p>
           <div class="link-box">
             <code id="signLink"></code>
             <button class="icon-btn" onclick="copyLink()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
             </button>
           </div>
-          <p style="font-size:12px;color:var(--muted);margin-top:8px">כל עובד שייכנס לקישור יוכל לרשום שם ולחתום</p>
+          <p style="font-size:12px;color:var(--muted);margin-top:8px">כל עובד שייכנס יראה בדיוק איפה למלא ולחתום</p>
+          <button class="btn" style="margin-top:1rem" onclick="resetNewDoc()">+ מסמך חדש נוסף</button>
         </div>
       </div>
 
-      <!-- Documents list -->
+      <!-- Documents -->
       <div class="page" id="page-docs">
         <div class="card">
-          <div class="card-header"><div class="card-title">כל המסמכים</div></div>
+          <div class="card-title" style="margin-bottom:1.25rem">כל המסמכים</div>
           <table>
             <thead><tr><th>מסמך</th><th>תאריך</th><th>חתימות</th><th>לינק</th></tr></thead>
             <tbody id="allDocsBody"><tr><td colspan="4" style="text-align:center;color:var(--muted);padding:2rem">טוען...</td></tr></tbody>
@@ -279,23 +253,11 @@
       <div class="page" id="page-settings">
         <div class="config-box">
           <h3>🔧 הגדרות Supabase</h3>
-          <p style="font-size:12px;color:var(--muted);margin-bottom:1rem">מלא פעם אחת — נשמר בדפדפן</p>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
-            <div>
-              <label>Supabase URL</label>
-              <input type="url" id="sbUrl" placeholder="https://xxxx.supabase.co">
-            </div>
-            <div>
-              <label>Anon Key</label>
-              <input type="text" id="sbKey" placeholder="eyJhbGci...">
-            </div>
+            <div><label>Supabase URL</label><input type="url" id="sbUrl" placeholder="https://xxxx.supabase.co"></div>
+            <div><label>Anon Key</label><input type="text" id="sbKey" placeholder="eyJhbGci..."></div>
           </div>
           <button class="btn primary" onclick="saveConfig()">שמור הגדרות</button>
-        </div>
-        <div class="card">
-          <div class="card-title" style="margin-bottom:1rem">SQL שכבר הרצת (לתיעוד)</div>
-          <pre>create table documents (id uuid default gen_random_uuid() primary key, title text not null, description text, pdf_url text, created_at timestamptz default now());
-create table signatures (id uuid default gen_random_uuid() primary key, document_id uuid references documents(id), signer_name text not null, signature_data text not null, signed_at timestamptz default now());</pre>
         </div>
       </div>
 
@@ -306,26 +268,22 @@ create table signatures (id uuid default gen_random_uuid() primary key, document
 <div class="toast" id="toast"><span class="dot"></span><span id="toastMsg"></span></div>
 
 <script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
 let SUPABASE_URL = localStorage.getItem('sb_url') || '';
 let SUPABASE_KEY = localStorage.getItem('sb_key') || '';
 let sbClient = null;
 
 function initSupabase() {
-  if (SUPABASE_URL && SUPABASE_KEY) {
-    sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    return true;
-  }
+  if (SUPABASE_URL && SUPABASE_KEY) { sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); return true; }
   return false;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   if (SUPABASE_URL) document.getElementById('sbUrl').value = SUPABASE_URL;
   if (SUPABASE_KEY) document.getElementById('sbKey').value = SUPABASE_KEY;
-  if (!initSupabase()) {
-    document.getElementById('configWarning').style.display = 'flex';
-  } else {
-    loadDashboard();
-  }
+  if (!initSupabase()) document.getElementById('configWarning').style.display = 'flex';
+  else loadDashboard();
 });
 
 function showPage(id) {
@@ -333,7 +291,7 @@ function showPage(id) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
   document.getElementById('nav-' + id).classList.add('active');
-  const titles = { dashboard: ['לוח בקרה','סטטוס חתימות'], newdoc: ['מסמך חדש','העלאה ושיתוף'], docs: ['מסמכים','כל המסמכים'], settings: ['הגדרות','חיבור Supabase'] };
+  const titles = { dashboard:['לוח בקרה','סטטוס חתימות'], newdoc:['מסמך חדש','העלאה והגדרת שדות'], docs:['מסמכים','כל המסמכים'], settings:['הגדרות','חיבור Supabase'] };
   const [title, hint] = titles[id] || [id,''];
   document.getElementById('pageTitle').textContent = title;
   document.getElementById('pageHint').textContent = hint;
@@ -352,6 +310,159 @@ function saveConfig() {
   setTimeout(() => { showPage('dashboard'); loadDashboard(); }, 500);
 }
 
+// ============ PDF EDITOR ============
+let pdfDoc = null, currentPage = 1, totalPages = 1;
+let fields = []; // [{type, page, xPct, yPct, wPct, hPct}]
+let activeTool = 'none';
+let selectedFile = null;
+let pdfScale = 1;
+
+function setTool(t) {
+  activeTool = t;
+  ['none','name','sig'].forEach(x => document.getElementById('tool' + x.charAt(0).toUpperCase() + x.slice(1))?.classList.remove('active'));
+  document.getElementById('tool' + t.charAt(0).toUpperCase() + t.slice(1))?.classList.add('active');
+  document.getElementById('fieldOverlay').style.cursor = t === 'none' ? 'default' : 'crosshair';
+}
+
+async function handleFileSelect(input) {
+  selectedFile = input.files[0];
+  if (!selectedFile) return;
+  document.getElementById('dropZone').innerHTML = `<div class="icon">✅</div><h3>${selectedFile.name}</h3><p>${(selectedFile.size/1024).toFixed(0)} KB</p>`;
+  document.getElementById('docTitle').value = selectedFile.name.replace('.pdf','');
+  document.getElementById('step2Card').style.display = 'block';
+  document.getElementById('linkCard').style.display = 'none';
+  fields = [];
+  currentPage = 1;
+  const arrayBuffer = await selectedFile.arrayBuffer();
+  pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  totalPages = pdfDoc.numPages;
+  renderPage(currentPage);
+}
+
+async function renderPage(pageNum) {
+  const page = await pdfDoc.getPage(pageNum);
+  const wrap = document.getElementById('pdfEditorWrap');
+  const maxW = wrap.clientWidth || 700;
+  const viewport = page.getViewport({ scale: 1 });
+  pdfScale = maxW / viewport.width;
+  const scaledViewport = page.getViewport({ scale: pdfScale });
+  const canvas = document.getElementById('pdfCanvas');
+  canvas.width = scaledViewport.width;
+  canvas.height = scaledViewport.height;
+  const ctx = canvas.getContext('2d');
+  await page.render({ canvasContext: ctx, viewport: scaledViewport }).promise;
+  document.getElementById('pageIndicator').textContent = `עמוד ${pageNum} מתוך ${totalPages}`;
+  renderFields();
+}
+
+function renderFields() {
+  const overlay = document.getElementById('fieldOverlay');
+  const canvas = document.getElementById('pdfCanvas');
+  overlay.style.width = canvas.width + 'px';
+  overlay.style.height = canvas.height + 'px';
+  // Remove old field divs
+  overlay.querySelectorAll('.placed-field').forEach(el => el.remove());
+  fields.filter(f => f.page === currentPage).forEach((f, i) => {
+    const globalIdx = fields.indexOf(f);
+    const el = document.createElement('div');
+    el.className = 'placed-field ' + (f.type === 'name' ? 'name' : 'signature');
+    el.style.left = (f.xPct * canvas.width) + 'px';
+    el.style.top = (f.yPct * canvas.height) + 'px';
+    el.style.width = (f.wPct * canvas.width) + 'px';
+    el.style.height = (f.hPct * canvas.height) + 'px';
+    el.innerHTML = `<span>${f.type === 'name' ? '✏️ שם' : '✍️ חתימה'}</span><button class="del-btn" onclick="deleteField(${globalIdx})">✕</button>`;
+    makeDraggable(el, globalIdx, canvas);
+    overlay.appendChild(el);
+  });
+  document.getElementById('fieldCount').textContent = fields.length + ' שדות';
+}
+
+function handleOverlayClick(e) {
+  if (activeTool === 'none') return;
+  const canvas = document.getElementById('pdfCanvas');
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  const type = activeTool === 'name' ? 'name' : 'signature';
+  const wPct = type === 'name' ? 0.25 : 0.3;
+  const hPct = type === 'name' ? 0.05 : 0.08;
+  fields.push({
+    type, page: currentPage,
+    xPct: x / canvas.width,
+    yPct: y / canvas.height,
+    wPct, hPct
+  });
+  renderFields();
+}
+
+function deleteField(idx) {
+  fields.splice(idx, 1);
+  renderFields();
+}
+
+function makeDraggable(el, idx, canvas) {
+  let startX, startY, startLeft, startTop;
+  el.addEventListener('mousedown', e => {
+    if (e.target.classList.contains('del-btn')) return;
+    e.preventDefault();
+    startX = e.clientX; startY = e.clientY;
+    startLeft = parseFloat(el.style.left); startTop = parseFloat(el.style.top);
+    const onMove = ev => {
+      const dx = ev.clientX - startX, dy = ev.clientY - startY;
+      const newLeft = Math.max(0, Math.min(canvas.width - parseFloat(el.style.width), startLeft + dx));
+      const newTop = Math.max(0, Math.min(canvas.height - parseFloat(el.style.height), startTop + dy));
+      el.style.left = newLeft + 'px'; el.style.top = newTop + 'px';
+      fields[idx].xPct = newLeft / canvas.width;
+      fields[idx].yPct = newTop / canvas.height;
+    };
+    const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+}
+
+function prevPage() { if (currentPage > 1) { currentPage--; renderPage(currentPage); } }
+function nextPage() { if (currentPage < totalPages) { currentPage++; renderPage(currentPage); } }
+
+async function uploadAndCreate() {
+  if (!sbClient) { showToast('יש לקנפג Supabase'); showPage('settings'); return; }
+  if (!selectedFile) { showToast('בחר PDF'); return; }
+  const title = document.getElementById('docTitle').value.trim();
+  if (!title) { showToast('הזן שם'); return; }
+  if (fields.length === 0) { showToast('הוסף לפחות שדה אחד'); return; }
+  const btn = document.getElementById('createBtn');
+  btn.textContent = 'מעלה...'; btn.disabled = true;
+  try {
+    const safeName = 'doc_' + Date.now() + '.pdf';
+    const { error: upErr } = await sbClient.storage.from('documents').upload(safeName, selectedFile);
+    if (upErr) throw upErr;
+    const { data: urlData } = sbClient.storage.from('documents').getPublicUrl(safeName);
+    const { data: doc, error: docErr } = await sbClient.from('documents').insert({
+      title,
+      description: document.getElementById('docDesc').value.trim(),
+      pdf_url: urlData.publicUrl,
+      fields: JSON.stringify(fields)
+    }).select().single();
+    if (docErr) throw docErr;
+    const base = window.location.origin + window.location.pathname.replace('index.html','') + 'sign.html';
+    document.getElementById('signLink').textContent = `${base}?doc=${doc.id}`;
+    document.getElementById('linkCard').style.display = 'block';
+    showToast('מסמך נוצר ✓');
+  } catch(e) { showToast('שגיאה: ' + e.message); }
+  btn.textContent = 'צור מסמך וקבל לינק'; btn.disabled = false;
+}
+
+function copyLink() { navigator.clipboard.writeText(document.getElementById('signLink').textContent); showToast('לינק הועתק ✓'); }
+
+function resetNewDoc() {
+  selectedFile = null; fields = []; pdfDoc = null; currentPage = 1;
+  document.getElementById('step2Card').style.display = 'none';
+  document.getElementById('linkCard').style.display = 'none';
+  document.getElementById('dropZone').innerHTML = '<div class="icon">📄</div><h3>גרור PDF לכאן או לחץ לבחירה</h3><p>תוכל להגדיר שדות שם וחתימה בשלב הבא</p>';
+  document.getElementById('pdfInput').value = '';
+}
+
+// ============ DASHBOARD ============
 async function loadDashboard() {
   if (!sbClient) return;
   try {
@@ -360,41 +471,37 @@ async function loadDashboard() {
     const docList = docs || [], sigList = sigs || [];
     const sigsByDoc = {};
     sigList.forEach(s => { sigsByDoc[s.document_id] = (sigsByDoc[s.document_id] || 0) + 1; });
-
+    const totalFields = docList.reduce((sum, d) => { try { return sum + (JSON.parse(d.fields||'[]')).length; } catch(e){ return sum; } }, 0);
     document.getElementById('stat-docs').textContent = docList.length;
     document.getElementById('stat-signed').textContent = sigList.length;
-    document.getElementById('stat-pending').textContent = docList.length > 0 ? '?' : '0';
-    document.getElementById('stat-done').textContent = docList.filter(d => (sigsByDoc[d.id] || 0) > 0).length;
-
+    document.getElementById('stat-fields').textContent = totalFields;
+    document.getElementById('stat-done').textContent = docList.filter(d => (sigsByDoc[d.id]||0) > 0).length;
     const base = window.location.origin + window.location.pathname.replace('index.html','') + 'sign.html';
-    const tbody = document.getElementById('docsTableBody');
-    tbody.innerHTML = docList.length === 0
-      ? '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:2rem">אין מסמכים עדיין</td></tr>'
+    document.getElementById('docsTableBody').innerHTML = docList.length === 0
+      ? '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:2rem">אין מסמכים עדיין</td></tr>'
       : docList.map(d => {
           const count = sigsByDoc[d.id] || 0;
+          let flds = 0; try { flds = JSON.parse(d.fields||'[]').length; } catch(e){}
           return `<tr>
             <td><div class="doc-chip">📄 ${d.title}</div></td>
             <td style="color:var(--muted)">${new Date(d.created_at).toLocaleDateString('he-IL')}</td>
-            <td><div class="progress-wrap"><div class="progress-bar"><div class="progress-fill" style="width:${Math.min(count*20,100)}%"></div></div><span style="font-size:12px;color:var(--muted)">${count} חתמו</span></div></td>
-            <td>
-              <button class="icon-btn" onclick="copyDocLink('${base}?doc=${d.id}')" title="העתק לינק">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              </button>
-            </td>
+            <td><span style="font-size:12px;color:var(--purple-light)">${flds} שדות</span></td>
+            <td><div class="progress-wrap"><div class="progress-bar"><div class="progress-fill" style="width:${Math.min(count*20,100)}%"></div></div><span style="font-size:12px;color:var(--muted)">${count}</span></div></td>
+            <td><button class="icon-btn" onclick="navigator.clipboard.writeText('${base}?doc=${d.id}');showToast('לינק הועתק ✓')" title="העתק לינק">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button></td>
           </tr>`;
         }).join('');
-
     const docMap = {};
     docList.forEach(d => docMap[d.id] = d.title);
-    const stbody = document.getElementById('sigsTableBody');
-    stbody.innerHTML = sigList.length === 0
+    document.getElementById('sigsTableBody').innerHTML = sigList.length === 0
       ? '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:2rem">אין חתימות עדיין</td></tr>'
       : sigList.slice(0,20).map(s => `<tr>
           <td style="font-weight:500">${s.signer_name}</td>
-          <td style="color:var(--muted)">${docMap[s.document_id] || '—'}</td>
+          <td style="color:var(--muted)">${docMap[s.document_id]||'—'}</td>
           <td style="color:var(--muted)">${new Date(s.signed_at).toLocaleString('he-IL')}</td>
           <td><span class="badge signed">✓ חתם</span></td>
-          <td><button class="icon-btn" onclick="downloadSignedPDF('${s.id}','${docMap[s.document_id]||''}','${s.signer_name}')" title="הורד PDF">
+          <td><button class="icon-btn" onclick="downloadSignedPDF('${s.id}')" title="הורד PDF">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           </button></td>
         </tr>`).join('');
@@ -406,83 +513,50 @@ async function loadAllDocs() {
   const { data: docs } = await sbClient.from('documents').select('*').order('created_at', { ascending: false });
   const { data: sigs } = await sbClient.from('signatures').select('document_id');
   const sigsByDoc = {};
-  (sigs||[]).forEach(s => { sigsByDoc[s.document_id] = (sigsByDoc[s.document_id] || 0) + 1; });
+  (sigs||[]).forEach(s => { sigsByDoc[s.document_id] = (sigsByDoc[s.document_id]||0)+1; });
   const base = window.location.origin + window.location.pathname.replace('index.html','') + 'sign.html';
   document.getElementById('allDocsBody').innerHTML = (docs||[]).map(d => `<tr>
     <td><div class="doc-chip">📄 ${d.title}</div></td>
     <td style="color:var(--muted)">${new Date(d.created_at).toLocaleDateString('he-IL')}</td>
-    <td>${sigsByDoc[d.id] || 0} חתימות</td>
-    <td><button class="btn" style="font-size:12px;padding:5px 10px;" onclick="copyDocLink('${base}?doc=${d.id}')">העתק לינק</button></td>
+    <td>${sigsByDoc[d.id]||0} חתימות</td>
+    <td><button class="btn" style="font-size:12px;padding:5px 10px;" onclick="navigator.clipboard.writeText('${base}?doc=${d.id}');showToast('הועתק ✓')">העתק לינק</button></td>
   </tr>`).join('');
-}
-
-function copyDocLink(url) {
-  navigator.clipboard.writeText(url);
-  showToast('לינק הועתק ✓');
 }
 
 function refreshData() { loadDashboard(); showToast('מרענן...'); }
 
-let selectedFile = null;
-function handleFileSelect(input) {
-  selectedFile = input.files[0];
-  if (!selectedFile) return;
-  document.getElementById('dropZone').innerHTML = `<div class="icon">✅</div><h3>${selectedFile.name}</h3><p>${(selectedFile.size/1024).toFixed(0)} KB</p>`;
-  document.getElementById('docTitle').value = selectedFile.name.replace('.pdf','');
-  document.getElementById('docDetailsCard').style.display = 'block';
-  document.getElementById('linkCard').style.display = 'none';
-}
-
-async function uploadAndCreate() {
-  if (!sbClient) { showToast('יש לקנפג Supabase תחילה'); showPage('settings'); return; }
-  if (!selectedFile) { showToast('בחר קובץ PDF'); return; }
-  const title = document.getElementById('docTitle').value.trim();
-  if (!title) { showToast('הזן שם למסמך'); return; }
-  const btn = document.getElementById('createBtn');
-  btn.textContent = 'מעלה...'; btn.disabled = true;
-  try {
-    const safeName = selectedFile.name.replace(/[^\x00-\x7F]/g, '').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9._-]/g, '') || 'document.pdf';
-    const fileName = `${Date.now()}_${safeName}`;
-    const { error: upErr } = await sbClient.storage.from('documents').upload(fileName, selectedFile);
-    if (upErr) throw upErr;
-    const { data: urlData } = sbClient.storage.from('documents').getPublicUrl(fileName);
-    const { data: doc, error: docErr } = await sbClient.from('documents').insert({
-      title, description: document.getElementById('docDesc').value.trim(), pdf_url: urlData.publicUrl
-    }).select().single();
-    if (docErr) throw docErr;
-    const base = window.location.origin + window.location.pathname.replace('index.html','') + 'sign.html';
-    const link = `${base}?doc=${doc.id}`;
-    document.getElementById('signLink').textContent = link;
-    document.getElementById('linkCard').style.display = 'block';
-    showToast('מסמך נוצר בהצלחה ✓');
-  } catch(e) { showToast('שגיאה: ' + e.message); }
-  btn.textContent = 'צור מסמך וקבל לינק'; btn.disabled = false;
-}
-
-function copyLink() {
-  navigator.clipboard.writeText(document.getElementById('signLink').textContent);
-  showToast('לינק הועתק ✓');
-}
-
-async function downloadSignedPDF(sigId, docTitle, signerName) {
+async function downloadSignedPDF(sigId) {
   showToast('מכין PDF...');
   try {
-    const { data: sig } = await sbClient.from('signatures').select('*, documents(pdf_url, title)').eq('id', sigId).single();
+    const { data: sig } = await sbClient.from('signatures').select('*, documents(pdf_url,title,fields)').eq('id', sigId).single();
     const pdfBytes = await fetch(sig.documents.pdf_url).then(r => r.arrayBuffer());
     const pdfDoc = await PDFLib.PDFDocument.load(pdfBytes);
     const pages = pdfDoc.getPages();
-    const lastPage = pages[pages.length - 1];
-    const sigImg = await pdfDoc.embedPng(sig.signature_data);
-    lastPage.drawImage(sigImg, { x: 50, y: 50, width: 160, height: 60 });
-    
+    let fields = []; try { fields = JSON.parse(sig.documents.fields||'[]'); } catch(e){}
+    // Find signature field and embed signature image
+    const sigFields = fields.filter(f => f.type === 'signature');
+    if (sigFields.length > 0 && sig.signature_data) {
+      const sigImg = await pdfDoc.embedPng(sig.signature_data);
+      sigFields.forEach(f => {
+        const page = pages[f.page - 1];
+        if (!page) return;
+        const { width, height } = page.getSize();
+        page.drawImage(sigImg, {
+          x: f.xPct * width,
+          y: height - (f.yPct + f.hPct) * height,
+          width: f.wPct * width,
+          height: f.hPct * height
+        });
+      });
+    }
     const out = await pdfDoc.save();
     const blob = new Blob([out], { type: 'application/pdf' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `${sig.documents.title}_${sig.signer_name}_חתום.pdf`;
+    a.download = `${sig.documents.title}_${sig.signer_name}_signed.pdf`;
     a.click();
     showToast('PDF הורד ✓');
-  } catch(e) { showToast('שגיאה בהורדה'); console.error(e); }
+  } catch(e) { showToast('שגיאה: ' + e.message); console.error(e); }
 }
 
 function showToast(msg) {
