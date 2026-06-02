@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>BLeader — חתימה על מסמך</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --purple: #6B21E8;
+    --purple-light: #9B59F5;
+    --pink: #E040A0;
+    --bg: #0D0B1A;
+    --surface: #16132A;
+    --surface2: #1E1A35;
+    --border: rgba(255,255,255,0.08);
+    --text: #F0EDFF;
+    --muted: #8B86A8;
+    --success: #22D6A0;
+    --font: 'Heebo', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: var(--font); background: var(--bg); color: var(--text);
+    direction: rtl; min-height: 100vh;
+    background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(107,33,232,0.25) 0%, transparent 60%), var(--bg);
+  }
+
+  .header {
+    padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border); background: rgba(22,19,42,0.9);
+    backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 10;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon {
+    width: 32px; height: 32px; border-radius: 9px;
+    background: linear-gradient(135deg, var(--purple), var(--pink));
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 16px; color: white;
+  }
+  .logo-text { font-size: 15px; font-weight: 700; }
+  .logo-sub { font-size: 10px; color: var(--muted); }
+
+  .container { max-width: 640px; margin: 0 auto; padding: 2rem 1rem; }
+
+  /* Steps */
+  .steps { display: flex; align-items: center; gap: 0; margin-bottom: 2.5rem; }
+  .step { display: flex; flex-direction: column; align-items: center; flex: 1; }
+  .step-num {
+    width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center; font-size: 13px;
+    font-weight: 700; color: var(--muted); background: var(--surface); transition: all 0.3s;
+  }
+  .step.active .step-num { border-color: var(--purple); color: var(--purple-light); background: rgba(107,33,232,0.15); }
+  .step.done .step-num { border-color: var(--success); color: var(--success); background: rgba(34,214,160,0.1); }
+  .step-label { font-size: 11px; color: var(--muted); margin-top: 6px; }
+  .step.active .step-label { color: var(--text); }
+  .step-line { flex: 1; height: 1px; background: var(--border); margin-bottom: 18px; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+    padding: 1.75rem; margin-bottom: 1.25rem;
+  }
+  .card-title { font-size: 17px; font-weight: 700; margin-bottom: 0.5rem; }
+  .card-sub { font-size: 13px; color: var(--muted); margin-bottom: 1.5rem; line-height: 1.6; }
+
+  /* Doc preview */
+  .doc-info {
+    display: flex; align-items: center; gap: 14px; padding: 14px 16px;
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 12px;
+    margin-bottom: 1.5rem;
+  }
+  .doc-icon {
+    width: 44px; height: 44px; background: rgba(107,33,232,0.15); border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;
+  }
+  .doc-info h3 { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+  .doc-info p { font-size: 12px; color: var(--muted); }
+
+  /* Input */
+  label { font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px; }
+  input[type=text] {
+    width: 100%; padding: 12px 14px; background: var(--surface2); border: 1.5px solid var(--border);
+    border-radius: 12px; color: var(--text); font-size: 16px; font-family: var(--font);
+    transition: border-color 0.2s; direction: rtl;
+  }
+  input[type=text]:focus { outline: none; border-color: var(--purple); }
+  input[type=text]::placeholder { color: var(--muted); }
+
+  /* PDF viewer */
+  .pdf-frame {
+    width: 100%; height: 400px; border: 1px solid var(--border); border-radius: 12px;
+    background: white; overflow: hidden;
+  }
+  .pdf-frame iframe { width: 100%; height: 100%; border: none; }
+  .pdf-no-preview {
+    width: 100%; height: 200px; border: 1px solid var(--border); border-radius: 12px;
+    background: var(--surface2); display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 10px;
+    font-size: 13px; color: var(--muted); margin-bottom: 1.25rem;
+  }
+
+  /* Signature pad */
+  .sig-container {
+    border: 1.5px solid rgba(107,33,232,0.35); border-radius: 14px; overflow: hidden;
+    position: relative; background: white; margin-bottom: 1rem;
+  }
+  .sig-hint {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    font-size: 13px; color: #aaa; pointer-events: none; transition: opacity 0.3s;
+    font-family: var(--font); white-space: nowrap;
+  }
+  canvas#sigPad { display: block; width: 100%; height: 180px; touch-action: none; cursor: crosshair; }
+  .sig-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; background: var(--surface2); border-radius: 10px; margin-bottom: 1rem;
+  }
+  .sig-toolbar span { font-size: 12px; color: var(--muted); }
+  .clear-btn {
+    background: none; border: 1px solid var(--border); color: var(--muted);
+    padding: 5px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; font-family: var(--font);
+    transition: all 0.2s;
+  }
+  .clear-btn:hover { border-color: rgba(224,64,160,0.4); color: var(--pink); }
+
+  /* Confirm checkbox */
+  .confirm-row {
+    display: flex; align-items: flex-start; gap: 12px; padding: 14px;
+    background: var(--surface2); border-radius: 12px; margin-bottom: 1.5rem;
+    cursor: pointer;
+  }
+  .confirm-row input[type=checkbox] { width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; accent-color: var(--purple); }
+  .confirm-row span { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  /* Buttons */
+  .btn {
+    width: 100%; padding: 14px; border-radius: 14px; border: none;
+    font-size: 16px; font-weight: 700; font-family: var(--font); cursor: pointer;
+    transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn.primary {
+    background: linear-gradient(135deg, var(--purple), var(--pink));
+    color: white;
+  }
+  .btn.primary:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 6px 30px rgba(107,33,232,0.35); }
+  .btn.primary:disabled { opacity: 0.5; transform: none; box-shadow: none; cursor: not-allowed; }
+  .btn.secondary { background: var(--surface2); border: 1px solid var(--border); color: var(--text); }
+
+  /* Success screen */
+  .success-screen { text-align: center; padding: 2rem 1rem; }
+  .success-icon {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: rgba(34,214,160,0.12); border: 2px solid rgba(34,214,160,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px; margin: 0 auto 1.5rem;
+  }
+  .success-screen h2 { font-size: 22px; font-weight: 700; margin-bottom: 10px; }
+  .success-screen p { font-size: 14px; color: var(--muted); line-height: 1.7; }
+
+  /* Loading */
+  .loading {
+    display: flex; align-items: center; justify-content: center; flex-direction: column;
+    gap: 1rem; padding: 3rem; color: var(--muted);
+  }
+  .spinner {
+    width: 36px; height: 36px; border: 3px solid var(--border);
+    border-top-color: var(--purple); border-radius: 50%; animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-screen { text-align: center; padding: 3rem 1rem; color: var(--muted); }
+  .error-screen .emoji { font-size: 48px; margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">B</div>
+    <div>
+      <div class="logo-text">BLeader</div>
+      <div class="logo-sub">פורטל חתימות</div>
+    </div>
+  </div>
+  <div style="font-size:12px;color:var(--muted)" id="headerDocName"></div>
+</div>
+
+<div class="container">
+
+  <!-- Steps -->
+  <div class="steps" id="stepsBar">
+    <div class="step active" id="step1"><div class="step-num">1</div><div class="step-label">פרטים</div></div>
+    <div class="step-line"></div>
+    <div class="step" id="step2"><div class="step-num">2</div><div class="step-label">קריאה</div></div>
+    <div class="step-line"></div>
+    <div class="step" id="step3"><div class="step-num">3</div><div class="step-label">חתימה</div></div>
+  </div>
+
+  <!-- Loading -->
+  <div id="screenLoading" class="loading">
+    <div class="spinner"></div>
+    <span>טוען מסמך...</span>
+  </div>
+
+  <!-- Error -->
+  <div id="screenError" class="error-screen" style="display:none">
+    <div class="emoji">😕</div>
+    <h2 style="color:var(--text);margin-bottom:8px">לינק לא תקין</h2>
+    <p>המסמך לא נמצא. בקש לינק חדש.</p>
+  </div>
+
+  <!-- Step 1: Name -->
+  <div id="screenStep1" style="display:none">
+    <div class="card">
+      <div class="card-title">ברוך הבא!</div>
+      <div class="card-sub">נא הזן את שמך המלא לפני החתימה על המסמך</div>
+
+      <div id="docInfoBox" class="doc-info">
+        <div class="doc-icon">📄</div>
+        <div>
+          <h3 id="docTitle">טוען...</h3>
+          <p id="docDesc">—</p>
+        </div>
+      </div>
+
+      <label>שם מלא *</label>
+      <input type="text" id="signerName" placeholder="ישראל ישראלי" autocomplete="name" oninput="checkStep1()">
+      <p style="font-size:11px;color:var(--muted);margin-top:6px">השם יופיע על גבי המסמך החתום</p>
+    </div>
+    <button class="btn primary" id="step1Btn" onclick="goToStep2()" disabled>
+      המשך לקריאת המסמך ←
+    </button>
+  </div>
+
+  <!-- Step 2: Read doc -->
+  <div id="screenStep2" style="display:none">
+    <div class="card">
+      <div class="card-title" id="step2DocTitle">קריאת המסמך</div>
+      <div class="card-sub">אנא קרא את המסמך לפני החתימה</div>
+      <div class="pdf-frame" id="pdfFrame">
+        <iframe id="pdfIframe" src="" title="מסמך לחתימה"></iframe>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:0.5rem">
+      <button class="btn secondary" onclick="goBack(2)" style="max-width:120px">חזור</button>
+      <button class="btn primary" onclick="goToStep3()">קראתי — להמשך לחתימה ←</button>
+    </div>
+  </div>
+
+  <!-- Step 3: Sign -->
+  <div id="screenStep3" style="display:none">
+    <div class="card">
+      <div class="card-title">חתימה</div>
+      <div class="card-sub">חתום בתיבה למטה עם האצבע או העכבר</div>
+
+      <div class="sig-container">
+        <canvas id="sigPad"></canvas>
+        <div class="sig-hint" id="sigHint">✏️ חתום כאן</div>
+      </div>
+
+      <div class="sig-toolbar">
+        <span id="sigStatus">ממתין לחתימה</span>
+        <button class="clear-btn" onclick="clearSig()">נקה חתימה</button>
+      </div>
+
+      <label class="confirm-row" for="confirmCheck">
+        <input type="checkbox" id="confirmCheck" onchange="checkStep3()">
+        <span>אני מאשר/ת שקראתי את המסמך ומסכים/מסכימה לתנאיו, וכי חתימתי האלקטרונית מחייבת</span>
+      </label>
+
+      <button class="btn primary" id="submitBtn" onclick="submitSignature()" disabled>
+        <span id="submitBtnText">אשר וחתום על המסמך</span>
+      </button>
+    </div>
+    <button class="btn secondary" onclick="goBack(3)" style="margin-top:8px">חזור לקריאה</button>
+  </div>
+
+  <!-- Success -->
+  <div id="screenSuccess" class="success-screen" style="display:none">
+    <div class="success-icon">✅</div>
+    <h2>החתימה התקבלה!</h2>
+    <p id="successMsg">תודה <strong></strong>, חתימתך על "<span id="successDoc"></span>" נקלטה בהצלחה.</p>
+    <p style="margin-top:1rem;font-size:12px">ניתן לסגור דף זה</p>
+  </div>
+
+</div>
+
+<script>
+// CONFIG — יש לעדכן עם ערכי Supabase שלך
+const SUPABASE_URL = localStorage.getItem('sb_url') || 'YOUR_SUPABASE_URL';
+const SUPABASE_KEY = localStorage.getItem('sb_key') || 'YOUR_SUPABASE_ANON_KEY';
+
+let sb, docData, hasSignature = false, currentStep = 1;
+
+// Init
+document.addEventListener('DOMContentLoaded', async () => {
+  // Try to load config from index.html's localStorage (same origin)
+  const sbUrl = localStorage.getItem('sb_url');
+  const sbKey = localStorage.getItem('sb_key');
+  if (!sbUrl || !sbKey || sbUrl === 'YOUR_SUPABASE_URL') {
+    showError('המערכת לא הוגדרה. פנה למנהל.');
+    return;
+  }
+  sb = window.supabase.createClient(sbUrl, sbKey);
+  const params = new URLSearchParams(window.location.search);
+  const docId = params.get('doc');
+  if (!docId) { showError(); return; }
+  try {
+    const { data, error } = await sb.from('documents').select('*').eq('id', docId).single();
+    if (error || !data) { showError(); return; }
+    docData = data;
+    document.getElementById('docTitle').textContent = data.title;
+    document.getElementById('docDesc').textContent = data.description || 'מסמך לחתימה';
+    document.getElementById('headerDocName').textContent = data.title;
+    document.getElementById('step2DocTitle').textContent = data.title;
+    if (data.pdf_url) document.getElementById('pdfIframe').src = data.pdf_url;
+    showScreen('step1');
+  } catch(e) { showError(); }
+  initCanvas();
+});
+
+function showScreen(name) {
+  ['Loading','Error','Step1','Step2','Step3','Success'].forEach(s => {
+    document.getElementById('screen'+s).style.display = 'none';
+  });
+  document.getElementById('screen' + name.charAt(0).toUpperCase() + name.slice(1)).style.display = 'block';
+}
+function showError(msg) {
+  showScreen('error');
+  if (msg) document.querySelector('#screenError p').textContent = msg;
+}
+
+function setStep(n) {
+  currentStep = n;
+  [1,2,3].forEach(i => {
+    const el = document.getElementById('step'+i);
+    el.classList.remove('active','done');
+    if (i < n) el.classList.add('done');
+    if (i === n) el.classList.add('active');
+  });
+}
+
+function checkStep1() {
+  const val = document.getElementById('signerName').value.trim();
+  document.getElementById('step1Btn').disabled = val.length < 2;
+}
+
+function goToStep2() {
+  if (document.getElementById('signerName').value.trim().length < 2) return;
+  setStep(2);
+  showScreen('step2');
+}
+
+function goToStep3() {
+  setStep(3);
+  showScreen('step3');
+  resizeCanvas();
+}
+
+function goBack(from) {
+  if (from === 2) { setStep(1); showScreen('step1'); }
+  if (from === 3) { setStep(2); showScreen('step2'); }
+}
+
+function checkStep3() {
+  const checked = document.getElementById('confirmCheck').checked;
+  document.getElementById('submitBtn').disabled = !(checked && hasSignature);
+}
+
+// Canvas
+let canvas, ctx, drawing = false;
+function initCanvas() {
+  canvas = document.getElementById('sigPad');
+  ctx = canvas.getContext('2d');
+  resizeCanvas();
+  canvas.addEventListener('mousedown', startDraw);
+  canvas.addEventListener('mousemove', draw);
+  canvas.addEventListener('mouseup', endDraw);
+  canvas.addEventListener('mouseleave', endDraw);
+  canvas.addEventListener('touchstart', e => { e.preventDefault(); startDraw(e.touches[0]); }, {passive:false});
+  canvas.addEventListener('touchmove', e => { e.preventDefault(); draw(e.touches[0]); }, {passive:false});
+  canvas.addEventListener('touchend', endDraw);
+}
+
+function resizeCanvas() {
+  if (!canvas) return;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width;
+  canvas.height = 180;
+}
+
+function getPos(e) {
+  const r = canvas.getBoundingClientRect();
+  return { x: (e.clientX - r.left) * (canvas.width / r.width), y: (e.clientY - r.top) * (canvas.height / r.height) };
+}
+
+function startDraw(e) {
+  drawing = true;
+  const p = getPos(e);
+  ctx.beginPath(); ctx.moveTo(p.x, p.y);
+  document.getElementById('sigHint').style.opacity = '0';
+}
+
+function draw(e) {
+  if (!drawing) return;
+  const p = getPos(e);
+  ctx.lineTo(p.x, p.y);
+  ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.stroke();
+}
+
+function endDraw() {
+  if (!drawing) return;
+  drawing = false;
+  hasSignature = true;
+  document.getElementById('sigStatus').textContent = 'חתימה הוזנה ✓';
+  document.getElementById('sigStatus').style.color = 'var(--success)';
+  checkStep3();
+}
+
+function clearSig() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  hasSignature = false;
+  document.getElementById('sigHint').style.opacity = '1';
+  document.getElementById('sigStatus').textContent = 'ממתין לחתימה';
+  document.getElementById('sigStatus').style.color = '';
+  document.getElementById('confirmCheck').checked = false;
+  document.getElementById('submitBtn').disabled = true;
+}
+
+async function submitSignature() {
+  const name = document.getElementById('signerName').value.trim();
+  const sigData = canvas.toDataURL('image/png');
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  document.getElementById('submitBtnText').textContent = 'שומר חתימה...';
+  try {
+    const { error } = await sb.from('signatures').insert({
+      document_id: docData.id,
+      signer_name: name,
+      signature_data: sigData
+    });
+    if (error) throw error;
+    document.querySelector('#successMsg strong').textContent = name;
+    document.getElementById('successDoc').textContent = docData.title;
+    document.getElementById('stepsBar').style.display = 'none';
+    showScreen('success');
+  } catch(e) {
+    alert('שגיאה בשמירה: ' + e.message);
+    btn.disabled = false;
+    document.getElementById('submitBtnText').textContent = 'אשר וחתום על המסמך';
+  }
+}
+</script>
+</body>
+</html>
