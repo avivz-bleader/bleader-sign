@@ -441,7 +441,8 @@ async function uploadAndCreate() {
   const btn = document.getElementById('createBtn');
   btn.textContent = 'מעלה...'; btn.disabled = true;
   try {
-    const fileName = `${Date.now()}_${selectedFile.name}`;
+    const safeName = selectedFile.name.replace(/[^\x00-\x7F]/g, '').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9._-]/g, '') || 'document.pdf';
+    const fileName = `${Date.now()}_${safeName}`;
     const { error: upErr } = await sbClient.storage.from('documents').upload(fileName, selectedFile);
     if (upErr) throw upErr;
     const { data: urlData } = sbClient.storage.from('documents').getPublicUrl(fileName);
