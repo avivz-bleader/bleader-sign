@@ -178,15 +178,13 @@ input[type=text]::placeholder{color:var(--muted);}
 <!-- Fullscreen Modal -->
 <div class="fs-modal" id="fsModal" style="display:none">
   <div class="fs-toolbar">
-    <div class="fs-nav">
-      <button onclick="fsPrev()">→ קודם</button>
-      <span id="fsPageLabel">עמוד 1 מתוך 1</span>
-      <button onclick="fsNext()">הבא ←</button>
+    <div class="fs-nav" id="fsNav">
+      <span id="fsPageLabel"></span>
     </div>
     <span style="color:white;font-size:13px;font-weight:600" id="fsDocTitle"></span>
     <button class="fs-close" onclick="closeFullscreen()">✕ סגור</button>
   </div>
-  <div class="fs-body" id="fsBody"></div>
+  <div class="fs-body" id="fsBody" style="padding:0;"></div>
 </div>
 
 <!-- Signature Modal -->
@@ -392,42 +390,22 @@ function checkStep3() {
 }
 
 let fsCurrentPage = 1;
-async function openFullscreen() {
+function openFullscreen() {
   const modal = document.getElementById('fsModal');
   modal.style.display = 'flex';
   document.getElementById('fsDocTitle').textContent = docData.title || '';
-  fsCurrentPage = 1;
-  await fsRenderPage(fsCurrentPage);
-}
-function closeFullscreen() { document.getElementById('fsModal').style.display = 'none'; }
-async function fsRenderPage(p) {
-  fsCurrentPage = p;
   const body = document.getElementById('fsBody');
   body.innerHTML = '';
-  const page = await pdfJsDoc.getPage(p);
-  // Render at high resolution (2x pixel ratio) then display smaller
-  const vw = Math.min(window.innerWidth - 32, 900);
-  const viewport = page.getViewport({ scale: 1 });
-  const displayScale = vw / viewport.width;
-  const pixelRatio = window.devicePixelRatio || 1;
-  const renderScale = displayScale * pixelRatio;
-  const sv = page.getViewport({ scale: renderScale });
-  const canvas = document.createElement('canvas');
-  canvas.width = sv.width;
-  canvas.height = sv.height;
-  // Display at logical size (CSS pixels)
-  canvas.style.width = (sv.width / pixelRatio) + 'px';
-  canvas.style.height = (sv.height / pixelRatio) + 'px';
-  const wrap = document.createElement('div');
-  wrap.className = 'fs-page';
-  wrap.style.width = (sv.width / pixelRatio) + 'px';
-  wrap.appendChild(canvas);
-  body.appendChild(wrap);
-  await page.render({ canvasContext: canvas.getContext('2d'), viewport: sv }).promise;
-  document.getElementById('fsPageLabel').textContent = `עמוד ${p} מתוך ${totalSignPages}`;
+  const iframe = document.createElement('iframe');
+  iframe.src = docData.pdf_url;
+  iframe.style.cssText = 'width:100%;flex:1;border:none;border-radius:8px;background:white;';
+  body.appendChild(iframe);
+  document.getElementById('fsPageLabel').textContent = '';
+  document.getElementById('fsNav').style.display = 'none';
 }
-async function fsPrev() { if (fsCurrentPage > 1) await fsRenderPage(fsCurrentPage - 1); }
-async function fsNext() { if (fsCurrentPage < totalSignPages) await fsRenderPage(fsCurrentPage + 1); }
+function closeFullscreen() { document.getElementById('fsModal').style.display = 'none'; }
+async function fsPrev() {}
+async function fsNext() {}
 
 async function submitSignature() {
   const name = document.getElementById('signerName').value.trim();
