@@ -82,6 +82,7 @@ input:focus{outline:none;border-color:var(--purple);}
 .placed-field.name{border-color:#6B21E8;background:rgba(107,33,232,0.15);color:#6B21E8;}
 .placed-field.signature{border-color:#E040A0;background:rgba(224,64,160,0.15);color:#E040A0;}
 .placed-field.custom{border-color:#F5A623;background:rgba(245,166,35,0.15);color:#F5A623;}
+.resize-handle{position:absolute;bottom:-5px;right:-5px;width:12px;height:12px;background:white;border:2px solid currentColor;border-radius:2px;cursor:se-resize;}
 .placed-field .del-btn{position:absolute;top:-8px;left:-8px;width:18px;height:18px;border-radius:50%;background:#E040A0;color:white;border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;line-height:1;}
 .field-toolbar{display:flex;gap:8px;margin-bottom:1rem;align-items:center;flex-wrap:wrap;}
 .field-btn{padding:8px 16px;border-radius:8px;border:1.5px dashed;background:transparent;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all 0.2s;}
@@ -387,8 +388,9 @@ function renderFields() {
     el.style.width = (f.wPct * canvas.width) + 'px';
     el.style.height = (f.hPct * canvas.height) + 'px';
     const label = f.type === 'name' ? '✏️ שם' : f.type === 'signature' ? '✍️ חתימה' : ('📝 ' + (f.label || 'שדה'));
-    el.innerHTML = `<span>${label}</span><button class="del-btn" onclick="deleteField(${globalIdx})">✕</button>`;
+    el.innerHTML = `<span>${label}</span><button class="del-btn" onclick="deleteField(${globalIdx})">✕</button><div class="resize-handle"></div>`;
     makeDraggable(el, globalIdx, canvas);
+    makeResizable(el, globalIdx, canvas);
     overlay.appendChild(el);
   });
   document.getElementById('fieldCount').textContent = fields.length + ' שדות';
@@ -431,6 +433,27 @@ function makeDraggable(el, idx, canvas) {
       el.style.left = newLeft + 'px'; el.style.top = newTop + 'px';
       fields[idx].xPct = newLeft / canvas.width;
       fields[idx].yPct = newTop / canvas.height;
+    };
+    const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+}
+
+function makeResizable(el, idx, canvas) {
+  const handle = el.querySelector('.resize-handle');
+  if (!handle) return;
+  handle.addEventListener('mousedown', e => {
+    e.stopPropagation(); e.preventDefault();
+    const startX = e.clientX, startY = e.clientY;
+    const startW = parseFloat(el.style.width), startH = parseFloat(el.style.height);
+    const onMove = ev => {
+      const newW = Math.max(40, startW + (ev.clientX - startX));
+      const newH = Math.max(20, startH + (ev.clientY - startY));
+      el.style.width = newW + 'px';
+      el.style.height = newH + 'px';
+      fields[idx].wPct = newW / canvas.width;
+      fields[idx].hPct = newH / canvas.height;
     };
     const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
     document.addEventListener('mousemove', onMove);
