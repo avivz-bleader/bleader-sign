@@ -289,6 +289,7 @@ async function renderSignPage(pageNum) {
       const input = document.createElement('input');
       input.type = 'text';
       input.className = 'field-input-name';
+      input.dataset.fieldIdx = idx;
       input.placeholder = 'שם מלא';
       // Pre-fill with signer name
       const initVal = fieldValues[idx] || document.getElementById('signerName').value || '';
@@ -327,9 +328,10 @@ async function prevSignPage() { if (currentSignPage > 1) await renderSignPage(cu
 async function nextSignPage() { if (currentSignPage < totalSignPages) await renderSignPage(currentSignPage + 1); }
 
 function goToStep3() {
-  // Collect current page field values
-  document.querySelectorAll('.field-input-name').forEach((input, i) => {
-    const idx = docData.fieldsArr.findIndex((f, fi) => f.type === 'name' && f.page === currentSignPage && !Object.keys(fieldValues).slice(0,fi).includes(String(fi)));
+  // Save all visible name field values
+  document.querySelectorAll('.field-input-name').forEach(input => {
+    const idx = parseInt(input.dataset.fieldIdx);
+    if (!isNaN(idx)) fieldValues[idx] = input.value;
   });
   setStep(3); showScreen('step3');
   // Build summary
