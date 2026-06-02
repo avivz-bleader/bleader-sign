@@ -35,9 +35,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);direction:rt
 .pdf-page-wrap{position:relative;background:white;border-radius:12px;overflow:hidden;margin-bottom:1rem;box-shadow:0 0 0 1px rgba(255,255,255,0.1);}
 .pdf-page-wrap canvas{display:block;width:100%;}
 .field-input-wrap{position:absolute;}
-.field-input-name{background:rgba(255,255,180,0.4);border:2px solid #6B21E8;border-radius:4px;width:100%;height:100%;padding:2px 6px;font-size:13px;font-family:var(--font);color:#111;outline:none;direction:rtl;}
+.field-input-name{background:rgba(255,255,200,0.9) !important;border:2px solid #6B21E8;border-radius:4px;width:100%;height:100%;padding:2px 6px;font-size:13px;font-family:var(--font);color:#111 !important;outline:none;direction:rtl;}
 .field-input-name::placeholder{color:#aaa;}
-.field-sig-box{background:rgba(224,64,160,0.06);border:2px dashed #E040A0;border-radius:4px;width:100%;height:100%;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-direction:column;gap:4px;}
+.field-sig-box{background:rgba(255,240,248,0.9) !important;border:2px dashed #E040A0;border-radius:4px;width:100%;height:100%;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-direction:column;gap:4px;}
 .field-sig-box.signed{border-style:solid;border-color:#22D6A0;}
 .field-sig-box span{font-size:10px;color:#E040A0;font-weight:700;text-shadow:0 0 3px white,0 0 6px white;}
 .field-sig-box.signed span{color:#22D6A0;}
@@ -403,7 +403,19 @@ function initModalCanvas() {
   modalCanvas.addEventListener('touchend', () => modalDrawing=false);
 }
 function getModalPos(e) { const r=modalCanvas.getBoundingClientRect(); return {x:(e.clientX-r.left)*(modalCanvas.width/r.width),y:(e.clientY-r.top)*(modalCanvas.height/r.height)}; }
-function openSigModal(idx) { activeFieldIdx=idx; modalHasSig=false; modalCtx.clearRect(0,0,modalCanvas.width,modalCanvas.height); document.getElementById('sigModalHint').style.opacity='1'; document.getElementById('sigModal').style.display='flex'; }
+function openSigModal(idx) {
+  activeFieldIdx = idx;
+  modalHasSig = false;
+  document.getElementById('sigModal').style.display = 'flex';
+  setTimeout(() => {
+    modalCanvas.width = modalCanvas.offsetWidth;
+    modalCanvas.height = 160;
+    modalCtx = modalCanvas.getContext('2d');
+    modalCtx.fillStyle = 'white';
+    modalCtx.fillRect(0, 0, modalCanvas.width, modalCanvas.height);
+    document.getElementById('sigModalHint').style.opacity = '1';
+  }, 50);
+}
 function clearModalSig() { modalCtx.clearRect(0,0,modalCanvas.width,modalCanvas.height); modalHasSig=false; document.getElementById('sigModalHint').style.opacity='1'; }
 function closeModal() { document.getElementById('sigModal').style.display='none'; }
 function confirmModalSig() {
