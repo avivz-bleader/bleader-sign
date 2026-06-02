@@ -487,9 +487,14 @@ async function loadDashboard() {
             <td style="color:var(--muted)">${new Date(d.created_at).toLocaleDateString('he-IL')}</td>
             <td><span style="font-size:12px;color:var(--purple-light)">${flds} שדות</span></td>
             <td><div class="progress-wrap"><div class="progress-bar"><div class="progress-fill" style="width:${Math.min(count*20,100)}%"></div></div><span style="font-size:12px;color:var(--muted)">${count}</span></div></td>
-            <td><button class="icon-btn" onclick="navigator.clipboard.writeText('${base}?doc=${d.id}');showToast('לינק הועתק ✓')" title="העתק לינק">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            </button></td>
+            <td style="display:flex;gap:4px;">
+              <button class="icon-btn" onclick="navigator.clipboard.writeText('${base}?doc=${d.id}');showToast('לינק הועתק ✓')" title="העתק לינק">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              </button>
+              <button class="icon-btn" onclick="deleteDoc('${d.id}')" title="מחק מסמך" style="color:#E040A0">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+              </button>
+            </td>
           </tr>`;
         }).join('');
     const docMap = {};
@@ -501,9 +506,14 @@ async function loadDashboard() {
           <td style="color:var(--muted)">${docMap[s.document_id]||'—'}</td>
           <td style="color:var(--muted)">${new Date(s.signed_at).toLocaleString('he-IL')}</td>
           <td><span class="badge signed">✓ חתם</span></td>
-          <td><button class="icon-btn" onclick="downloadSignedPDF('${s.id}')" title="הורד PDF">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          </button></td>
+          <td style="display:flex;gap:4px;">
+            <button class="icon-btn" onclick="downloadSignedPDF('${s.id}')" title="הורד PDF">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </button>
+            <button class="icon-btn" onclick="deleteSig('${s.id}')" title="מחק חתימה" style="color:#E040A0">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+            </button>
+          </td>
         </tr>`).join('');
   } catch(e) { console.error(e); }
 }
@@ -557,6 +567,23 @@ async function downloadSignedPDF(sigId) {
     a.click();
     showToast('PDF הורד ✓');
   } catch(e) { showToast('שגיאה: ' + e.message); console.error(e); }
+}
+
+async function deleteSig(id) {
+  if (!confirm('למחוק חתימה זו?')) return;
+  const { error } = await sbClient.from('signatures').delete().eq('id', id);
+  if (error) { showToast('שגיאה במחיקה'); return; }
+  showToast('החתימה נמחקה ✓');
+  loadDashboard();
+}
+
+async function deleteDoc(id) {
+  if (!confirm('למחוק מסמך זה וכל חתימותיו?')) return;
+  await sbClient.from('signatures').delete().eq('document_id', id);
+  const { error } = await sbClient.from('documents').delete().eq('id', id);
+  if (error) { showToast('שגיאה במחיקה'); return; }
+  showToast('המסמך נמחק ✓');
+  loadDashboard();
 }
 
 function showToast(msg) {
