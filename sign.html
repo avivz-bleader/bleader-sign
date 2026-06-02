@@ -134,7 +134,7 @@ input[type=text]::placeholder{color:var(--muted);}
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:0.75rem;">
         <button onclick="openFullscreen()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:6px;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-          הצג מסמך במסך מלא
+          פתח מסמך לצפייה
         </button>
         <span style="font-size:11px;color:var(--muted)">לחץ לצפייה מלאה לפני מילוי</span>
       </div>
@@ -391,17 +391,7 @@ function checkStep3() {
 
 let fsCurrentPage = 1;
 function openFullscreen() {
-  const modal = document.getElementById('fsModal');
-  modal.style.display = 'flex';
-  document.getElementById('fsDocTitle').textContent = docData.title || '';
-  const body = document.getElementById('fsBody');
-  body.innerHTML = '';
-  const iframe = document.createElement('iframe');
-  iframe.src = docData.pdf_url;
-  iframe.style.cssText = 'width:100%;flex:1;border:none;border-radius:8px;background:white;';
-  body.appendChild(iframe);
-  document.getElementById('fsPageLabel').textContent = '';
-  document.getElementById('fsNav').style.display = 'none';
+  window.open(docData.pdf_url, '_blank');
 }
 function closeFullscreen() { document.getElementById('fsModal').style.display = 'none'; }
 async function fsPrev() {}
