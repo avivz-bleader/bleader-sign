@@ -291,7 +291,9 @@ async function renderSignPage(pageNum) {
       input.className = 'field-input-name';
       input.placeholder = 'שם מלא';
       // Pre-fill with signer name
-      input.value = fieldValues[idx] || document.getElementById('signerName').value || '';
+      const initVal = fieldValues[idx] || document.getElementById('signerName').value || '';
+      input.value = initVal;
+      if (initVal) fieldValues[idx] = initVal;
       input.addEventListener('input', () => { fieldValues[idx] = input.value; });
       fieldWrap.appendChild(input);
     } else {
