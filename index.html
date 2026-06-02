@@ -9,38 +9,26 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <style>
   :root {
-    --purple: #6B21E8;
-    --purple-light: #9B59F5;
-    --pink: #E040A0;
-    --bg: #0D0B1A;
-    --surface: #16132A;
-    --surface2: #1E1A35;
-    --border: rgba(255,255,255,0.08);
-    --text: #F0EDFF;
-    --muted: #8B86A8;
-    --success: #22D6A0;
-    --warning: #F5A623;
-    --font: 'Heebo', sans-serif;
+    --purple: #6B21E8; --purple-light: #9B59F5; --pink: #E040A0;
+    --bg: #0D0B1A; --surface: #16132A; --surface2: #1E1A35;
+    --border: rgba(255,255,255,0.08); --text: #F0EDFF; --muted: #8B86A8;
+    --success: #22D6A0; --warning: #F5A623; --font: 'Heebo', sans-serif;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; direction: rtl; }
-
-  /* Background */
   body::before {
-    content: '';
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    content: ''; position: fixed; inset: 0;
     background: radial-gradient(ellipse 60% 50% at 70% 20%, rgba(107,33,232,0.15) 0%, transparent 60%),
                 radial-gradient(ellipse 40% 40% at 20% 80%, rgba(224,64,160,0.08) 0%, transparent 60%);
     pointer-events: none; z-index: 0;
   }
-
   .layout { display: flex; min-height: 100vh; position: relative; z-index: 1; }
 
   /* Sidebar */
   .sidebar {
-    width: 240px; background: var(--surface); border-left: 1px solid var(--border);
+    width: 220px; background: var(--surface); border-left: 1px solid var(--border);
     display: flex; flex-direction: column; padding: 1.5rem 1rem; flex-shrink: 0;
-    position: sticky; top: 0; height: 100vh;
+    position: fixed; top: 0; right: 0; height: 100vh; z-index: 100;
   }
   .logo { display: flex; align-items: center; gap: 10px; padding: 0.5rem 0.5rem 2rem; }
   .logo-icon {
@@ -51,51 +39,38 @@
   }
   .logo-text { font-size: 16px; font-weight: 700; }
   .logo-sub { font-size: 11px; color: var(--muted); font-weight: 300; letter-spacing: 1px; text-transform: uppercase; }
-
   .nav-section { font-size: 10px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; padding: 0 0.5rem; margin: 1rem 0 0.5rem; }
   .nav-item {
     display: flex; align-items: center; gap: 10px; padding: 10px 12px;
     border-radius: 10px; cursor: pointer; color: var(--muted); font-size: 14px;
-    transition: all 0.2s; text-decoration: none; margin-bottom: 2px;
+    transition: all 0.2s; margin-bottom: 2px; user-select: none;
   }
   .nav-item:hover { background: var(--surface2); color: var(--text); }
   .nav-item.active { background: rgba(107,33,232,0.2); color: var(--purple-light); font-weight: 500; }
-  .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; pointer-events: none; }
 
   /* Main */
-  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .main { flex: 1; margin-right: 220px; display: flex; flex-direction: column; }
   .topbar {
     padding: 1.25rem 2rem; display: flex; align-items: center; justify-content: space-between;
-    border-bottom: 1px solid var(--border); background: rgba(13,11,26,0.8);
+    border-bottom: 1px solid var(--border); background: rgba(13,11,26,0.9);
     backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 10;
   }
   .topbar h1 { font-size: 18px; font-weight: 700; }
   .topbar .hint { font-size: 12px; color: var(--muted); }
-
   .content { flex: 1; padding: 2rem; overflow-y: auto; }
   .page { display: none; }
   .page.active { display: block; }
 
   /* Stats */
   .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
-  .stat-card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
-    padding: 1.25rem; position: relative; overflow: hidden;
-  }
-  .stat-card::before {
-    content: ''; position: absolute; top: 0; right: 0; width: 60px; height: 60px;
-    border-radius: 50%; background: var(--accent, var(--purple)); opacity: 0.08;
-    transform: translate(20px, -20px);
-  }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem; }
   .stat-label { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
   .stat-value { font-size: 28px; font-weight: 700; }
   .stat-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
 
   /* Cards */
-  .card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
-    padding: 1.5rem; margin-bottom: 1.5rem;
-  }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem; }
   .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
   .card-title { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
 
@@ -107,39 +82,30 @@
     transition: all 0.2s; font-weight: 500;
   }
   .btn:hover { border-color: rgba(107,33,232,0.5); background: rgba(107,33,232,0.1); }
-  .btn.primary {
-    background: linear-gradient(135deg, var(--purple), var(--pink));
-    border-color: transparent; color: white;
-  }
-  .btn.primary:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(107,33,232,0.3); }
-  .btn svg { width: 16px; height: 16px; }
+  .btn.primary { background: linear-gradient(135deg, var(--purple), var(--pink)); border-color: transparent; color: white; }
+  .btn.primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn svg { width: 16px; height: 16px; pointer-events: none; }
 
   /* Table */
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { text-align: right; color: var(--muted); font-weight: 400; padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 12px; letter-spacing: 0.5px; }
+  th { text-align: right; color: var(--muted); font-weight: 400; padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 12px; }
   td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
   tr:last-child td { border-bottom: none; }
-  tr:hover td { background: rgba(255,255,255,0.02); }
 
   /* Badge */
-  .badge {
-    display: inline-flex; align-items: center; gap: 5px;
-    font-size: 11px; padding: 4px 10px; border-radius: 99px; font-weight: 500;
-  }
+  .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; padding: 4px 10px; border-radius: 99px; font-weight: 500; }
   .badge.signed { background: rgba(34,214,160,0.12); color: var(--success); }
   .badge.pending { background: rgba(245,166,35,0.12); color: var(--warning); }
 
   /* Progress */
   .progress-wrap { display: flex; align-items: center; gap: 10px; }
   .progress-bar { flex: 1; height: 5px; background: rgba(255,255,255,0.06); border-radius: 99px; overflow: hidden; min-width: 80px; }
-  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--purple), var(--pink)); border-radius: 99px; transition: width 0.5s; }
-  .progress-text { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--purple), var(--pink)); border-radius: 99px; }
 
   /* Upload */
   .upload-zone {
     border: 1.5px dashed rgba(107,33,232,0.4); border-radius: 16px;
-    padding: 3.5rem 2rem; text-align: center; cursor: pointer;
-    transition: all 0.2s; background: rgba(107,33,232,0.03);
+    padding: 3.5rem 2rem; text-align: center; cursor: pointer; transition: all 0.2s;
   }
   .upload-zone:hover { border-color: var(--purple); background: rgba(107,33,232,0.07); }
   .upload-zone .icon { font-size: 40px; margin-bottom: 12px; }
@@ -147,58 +113,37 @@
   .upload-zone p { font-size: 13px; color: var(--muted); }
 
   /* Link box */
-  .link-box {
-    display: flex; align-items: center; gap: 10px; background: var(--surface2);
-    border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px;
-  }
+  .link-box { display: flex; align-items: center; gap: 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; }
   .link-box code { flex: 1; font-size: 12px; color: var(--purple-light); word-break: break-all; }
-  
-  /* Config area */
-  .config-box {
-    background: rgba(107,33,232,0.06); border: 1px solid rgba(107,33,232,0.2);
-    border-radius: 14px; padding: 1.25rem; margin-bottom: 1.5rem;
-  }
+
+  /* Config */
+  .config-box { background: rgba(107,33,232,0.06); border: 1px solid rgba(107,33,232,0.2); border-radius: 14px; padding: 1.25rem; margin-bottom: 1.5rem; }
   .config-box h3 { font-size: 14px; font-weight: 600; margin-bottom: 1rem; color: var(--purple-light); }
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px; }
   label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 5px; }
   input[type=text], input[type=url] {
     width: 100%; padding: 9px 12px; background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 8px; color: var(--text); font-size: 13px; font-family: var(--font);
-    transition: border-color 0.2s;
+    border-radius: 8px; color: var(--text); font-size: 13px; font-family: var(--font); transition: border-color 0.2s;
   }
   input:focus { outline: none; border-color: var(--purple); }
-  
-  /* Doc name chip */
-  .doc-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px; font-size: 12px; }
 
-  /* Icon action */
+  .doc-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px; font-size: 12px; }
   .icon-btn { background: none; border: none; cursor: pointer; color: var(--muted); padding: 6px; border-radius: 6px; transition: all 0.2s; }
   .icon-btn:hover { color: var(--text); background: var(--surface2); }
   .icon-btn svg { width: 16px; height: 16px; display: block; }
 
-  /* Toast */
+  .warning-bar { background: rgba(245,166,35,0.1); border: 1px solid rgba(245,166,35,0.25); border-radius: 10px; padding: 10px 14px; font-size: 12px; color: var(--warning); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px; }
+
   .toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px);
     background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
     padding: 12px 20px; font-size: 13px; font-weight: 500;
     display: flex; align-items: center; gap: 8px;
     transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); z-index: 999;
-    backdrop-filter: blur(10px);
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
   .toast .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
 
-  /* Config warning */
-  .warning-bar {
-    background: rgba(245,166,35,0.1); border: 1px solid rgba(245,166,35,0.25);
-    border-radius: 10px; padding: 10px 14px; font-size: 12px; color: var(--warning);
-    margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px;
-  }
-
-  @media (max-width: 768px) {
-    .sidebar { display: none; }
-    .stats { grid-template-columns: 1fr 1fr; }
-  }
+  pre { background: var(--surface2); border-radius: 10px; padding: 1rem; font-size: 11px; overflow-x: auto; color: var(--muted); line-height: 1.8; }
 </style>
 </head>
 <body>
@@ -211,22 +156,21 @@
         <div class="logo-sub">Sign Portal</div>
       </div>
     </div>
-
     <div class="nav-section">ניהול</div>
-    <div class="nav-item active" onclick="showPage('dashboard',this)">
+    <div class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
       לוח בקרה
     </div>
-    <div class="nav-item" onclick="showPage('newdoc',this)">
+    <div class="nav-item" id="nav-newdoc" onclick="showPage('newdoc')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
       מסמך חדש
     </div>
-    <div class="nav-item" onclick="showPage('docs',this)">
+    <div class="nav-item" id="nav-docs" onclick="showPage('docs')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
       מסמכים
     </div>
     <div class="nav-section">הגדרות</div>
-    <div class="nav-item" onclick="showPage('settings',this)">
+    <div class="nav-item" id="nav-settings" onclick="showPage('settings')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
       הגדרות Supabase
     </div>
@@ -243,7 +187,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
           רענן
         </button>
-        <button class="btn primary" onclick="showPage('newdoc', document.querySelector('[onclick*=newdoc]'))">
+        <button class="btn primary" onclick="showPage('newdoc')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           מסמך חדש
         </button>
@@ -256,60 +200,27 @@
       <div class="page active" id="page-dashboard">
         <div id="configWarning" class="warning-bar" style="display:none">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          יש לקנפג את Supabase בהגדרות לפני השימוש
+          יש לקנפג את Supabase בהגדרות לפני השימוש —
+          <span style="cursor:pointer;text-decoration:underline" onclick="showPage('settings')">לחץ כאן</span>
         </div>
         <div class="stats">
-          <div class="stat-card" style="--accent:var(--purple)">
-            <div class="stat-label">מסמכים פעילים</div>
-            <div class="stat-value" id="stat-docs">—</div>
-            <div class="stat-sub">סה"כ מסמכים</div>
-          </div>
-          <div class="stat-card" style="--accent:var(--warning)">
-            <div class="stat-label">ממתינים</div>
-            <div class="stat-value" id="stat-pending" style="color:var(--warning)">—</div>
-            <div class="stat-sub">טרם חתמו</div>
-          </div>
-          <div class="stat-card" style="--accent:var(--success)">
-            <div class="stat-label">חתמו</div>
-            <div class="stat-value" id="stat-signed" style="color:var(--success)">—</div>
-            <div class="stat-sub">חתימות שהתקבלו</div>
-          </div>
-          <div class="stat-card" style="--accent:var(--pink)">
-            <div class="stat-label">הושלמו</div>
-            <div class="stat-value" id="stat-done">—</div>
-            <div class="stat-sub">כל החתימות התקבלו</div>
-          </div>
+          <div class="stat-card"><div class="stat-label">מסמכים פעילים</div><div class="stat-value" id="stat-docs">—</div><div class="stat-sub">סה"כ מסמכים</div></div>
+          <div class="stat-card"><div class="stat-label">ממתינים</div><div class="stat-value" id="stat-pending" style="color:var(--warning)">—</div><div class="stat-sub">טרם חתמו</div></div>
+          <div class="stat-card"><div class="stat-label">חתמו</div><div class="stat-value" id="stat-signed" style="color:var(--success)">—</div><div class="stat-sub">חתימות שהתקבלו</div></div>
+          <div class="stat-card"><div class="stat-label">הושלמו</div><div class="stat-value" id="stat-done">—</div><div class="stat-sub">כל החתימות התקבלו</div></div>
         </div>
-
         <div class="card">
-          <div class="card-header">
-            <div class="card-title">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-              מסמכים פעילים
-            </div>
-          </div>
-          <div id="docsTableWrap">
-            <table>
-              <thead><tr><th>מסמך</th><th>תאריך יצירה</th><th>התקדמות</th><th>פעולות</th></tr></thead>
-              <tbody id="docsTableBody">
-                <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:2rem">טוען...</td></tr>
-              </tbody>
-            </table>
-          </div>
+          <div class="card-header"><div class="card-title">מסמכים פעילים</div></div>
+          <table>
+            <thead><tr><th>מסמך</th><th>תאריך יצירה</th><th>התקדמות</th><th>פעולות</th></tr></thead>
+            <tbody id="docsTableBody"><tr><td colspan="4" style="text-align:center;color:var(--muted);padding:2rem">טוען...</td></tr></tbody>
+          </table>
         </div>
-
-        <div class="card" id="signaturesCard">
-          <div class="card-header">
-            <div class="card-title">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              חתימות שהתקבלו
-            </div>
-          </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">חתימות שהתקבלו</div></div>
           <table>
             <thead><tr><th>שם</th><th>מסמך</th><th>תאריך ושעה</th><th>סטטוס</th><th>הורד PDF</th></tr></thead>
-            <tbody id="sigsTableBody">
-              <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:2rem">טוען...</td></tr>
-            </tbody>
+            <tbody id="sigsTableBody"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:2rem">טוען...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -317,10 +228,7 @@
       <!-- New Document -->
       <div class="page" id="page-newdoc">
         <div class="card">
-          <div class="card-title" style="margin-bottom:1.25rem">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            העלאת PDF לחתימה
-          </div>
+          <div class="card-title" style="margin-bottom:1.25rem">העלאת PDF לחתימה</div>
           <div class="upload-zone" onclick="document.getElementById('pdfInput').click()" id="dropZone">
             <div class="icon">📄</div>
             <h3>גרור PDF לכאן או לחץ לבחירה</h3>
@@ -328,7 +236,6 @@
           </div>
           <input type="file" id="pdfInput" accept=".pdf" style="display:none" onchange="handleFileSelect(this)">
         </div>
-
         <div class="card" id="docDetailsCard" style="display:none">
           <div class="card-title" style="margin-bottom:1.25rem">פרטי המסמך</div>
           <div style="margin-bottom:1rem">
@@ -337,26 +244,19 @@
           </div>
           <div style="margin-bottom:1.5rem">
             <label>תיאור קצר (יופיע לעובד)</label>
-            <input type="text" id="docDesc" placeholder="לדוגמה: אנא קרא וחתום על מסמך זה">
+            <input type="text" id="docDesc" placeholder="אנא קרא וחתום על מסמך זה">
           </div>
-
-          <div id="uploadedFileInfo" style="margin-bottom:1.5rem"></div>
-
           <button class="btn primary" onclick="uploadAndCreate()" id="createBtn">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
             צור מסמך וקבל לינק
           </button>
         </div>
-
         <div class="card" id="linkCard" style="display:none">
-          <div class="card-title" style="margin-bottom:1.25rem; color:var(--success)">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-            המסמך נוצר בהצלחה!
-          </div>
-          <p style="font-size:13px;color:var(--muted);margin-bottom:1rem">שלח את הלינק הבא לקבוצת WhatsApp:</p>
+          <div class="card-title" style="margin-bottom:1.25rem;color:var(--success)">✅ המסמך נוצר בהצלחה!</div>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:1rem">שלח את הלינק לקבוצת WhatsApp:</p>
           <div class="link-box">
             <code id="signLink"></code>
-            <button class="icon-btn" onclick="copyLink()" title="העתק">
+            <button class="icon-btn" onclick="copyLink()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
             </button>
           </div>
@@ -367,14 +267,10 @@
       <!-- Documents list -->
       <div class="page" id="page-docs">
         <div class="card">
-          <div class="card-header">
-            <div class="card-title">כל המסמכים</div>
-          </div>
+          <div class="card-header"><div class="card-title">כל המסמכים</div></div>
           <table>
             <thead><tr><th>מסמך</th><th>תאריך</th><th>חתימות</th><th>לינק</th></tr></thead>
-            <tbody id="allDocsBody">
-              <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:2rem">טוען...</td></tr>
-            </tbody>
+            <tbody id="allDocsBody"><tr><td colspan="4" style="text-align:center;color:var(--muted);padding:2rem">טוען...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -384,7 +280,7 @@
         <div class="config-box">
           <h3>🔧 הגדרות Supabase</h3>
           <p style="font-size:12px;color:var(--muted);margin-bottom:1rem">מלא פעם אחת — נשמר בדפדפן</p>
-          <div class="form-row">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
             <div>
               <label>Supabase URL</label>
               <input type="url" id="sbUrl" placeholder="https://xxxx.supabase.co">
@@ -394,44 +290,12 @@
               <input type="text" id="sbKey" placeholder="eyJhbGci...">
             </div>
           </div>
-          <button class="btn primary" onclick="saveConfig()" style="margin-top:8px">שמור הגדרות</button>
+          <button class="btn primary" onclick="saveConfig()">שמור הגדרות</button>
         </div>
-
         <div class="card">
-          <div class="card-title" style="margin-bottom:1rem">הוראות הגדרה</div>
-          <ol style="font-size:13px;color:var(--muted);line-height:2.2;padding-right:1.2rem">
-            <li>גש ל-<strong style="color:var(--text)">supabase.com</strong> וצור פרויקט חינמי</li>
-            <li>ב-Table Editor צור טבלה <code style="background:var(--surface2);padding:1px 6px;border-radius:4px">documents</code> (id, title, description, pdf_url, created_at)</li>
-            <li>צור טבלה <code style="background:var(--surface2);padding:1px 6px;border-radius:4px">signatures</code> (id, document_id, signer_name, signature_data, signed_at)</li>
-            <li>ב-Storage צור bucket בשם <code style="background:var(--surface2);padding:1px 6px;border-radius:4px">documents</code> (public)</li>
-            <li>העתק את ה-URL ו-anon key מ-Settings > API</li>
-            <li>הדבק למעלה ולחץ שמור</li>
-          </ol>
-          <div style="margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--border)">
-            <div class="card-title" style="margin-bottom:0.75rem;font-size:13px">SQL להרצה ב-Supabase SQL Editor:</div>
-            <pre style="background:var(--surface2);border-radius:10px;padding:1rem;font-size:11px;overflow-x:auto;color:var(--muted);line-height:1.8"><code>create table documents (
-  id uuid default gen_random_uuid() primary key,
-  title text not null,
-  description text,
-  pdf_url text,
-  created_at timestamptz default now()
-);
-
-create table signatures (
-  id uuid default gen_random_uuid() primary key,
-  document_id uuid references documents(id),
-  signer_name text not null,
-  signature_data text not null,
-  signed_at timestamptz default now()
-);
-
--- Allow public read/insert
-alter table documents enable row level security;
-alter table signatures enable row level security;
-create policy "public read docs" on documents for select using (true);
-create policy "public insert sigs" on signatures for insert with check (true);
-create policy "public read sigs" on signatures for select using (true);</code></pre>
-          </div>
+          <div class="card-title" style="margin-bottom:1rem">SQL שכבר הרצת (לתיעוד)</div>
+          <pre>create table documents (id uuid default gen_random_uuid() primary key, title text not null, description text, pdf_url text, created_at timestamptz default now());
+create table signatures (id uuid default gen_random_uuid() primary key, document_id uuid references documents(id), signer_name text not null, signature_data text not null, signed_at timestamptz default now());</pre>
         </div>
       </div>
 
@@ -442,7 +306,6 @@ create policy "public read sigs" on signatures for select using (true);</code></
 <div class="toast" id="toast"><span class="dot"></span><span id="toastMsg"></span></div>
 
 <script>
-// Config
 let SUPABASE_URL = localStorage.getItem('sb_url') || '';
 let SUPABASE_KEY = localStorage.getItem('sb_key') || '';
 let supabase = null;
@@ -455,17 +318,6 @@ function initSupabase() {
   return false;
 }
 
-function saveConfig() {
-  SUPABASE_URL = document.getElementById('sbUrl').value.trim();
-  SUPABASE_KEY = document.getElementById('sbKey').value.trim();
-  localStorage.setItem('sb_url', SUPABASE_URL);
-  localStorage.setItem('sb_key', SUPABASE_KEY);
-  initSupabase();
-  showToast('הגדרות נשמרו ✓');
-  document.getElementById('configWarning').style.display = 'none';
-}
-
-// Init
 document.addEventListener('DOMContentLoaded', () => {
   if (SUPABASE_URL) document.getElementById('sbUrl').value = SUPABASE_URL;
   if (SUPABASE_KEY) document.getElementById('sbKey').value = SUPABASE_KEY;
@@ -476,92 +328,77 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// Pages
-const pageTitles = {
-  dashboard: ['לוח בקרה', 'סטטוס חתימות'],
-  newdoc: ['מסמך חדש', 'העלאה ושיתוף'],
-  docs: ['מסמכים', 'כל המסמכים'],
-  settings: ['הגדרות', 'חיבור Supabase']
-};
-
-function showPage(id, el) {
+function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
-  if (el) el.classList.add('active');
-  const [title, hint] = pageTitles[id] || [id, ''];
+  document.getElementById('nav-' + id).classList.add('active');
+  const titles = { dashboard: ['לוח בקרה','סטטוס חתימות'], newdoc: ['מסמך חדש','העלאה ושיתוף'], docs: ['מסמכים','כל המסמכים'], settings: ['הגדרות','חיבור Supabase'] };
+  const [title, hint] = titles[id] || [id,''];
   document.getElementById('pageTitle').textContent = title;
   document.getElementById('pageHint').textContent = hint;
   if (id === 'dashboard') loadDashboard();
   if (id === 'docs') loadAllDocs();
 }
 
-// Load dashboard
+function saveConfig() {
+  SUPABASE_URL = document.getElementById('sbUrl').value.trim();
+  SUPABASE_KEY = document.getElementById('sbKey').value.trim();
+  localStorage.setItem('sb_url', SUPABASE_URL);
+  localStorage.setItem('sb_key', SUPABASE_KEY);
+  initSupabase();
+  showToast('הגדרות נשמרו ✓');
+  document.getElementById('configWarning').style.display = 'none';
+  setTimeout(() => { showPage('dashboard'); loadDashboard(); }, 500);
+}
+
 async function loadDashboard() {
   if (!supabase) return;
   try {
     const { data: docs } = await supabase.from('documents').select('*').order('created_at', { ascending: false });
     const { data: sigs } = await supabase.from('signatures').select('*').order('signed_at', { ascending: false });
-
-    const docList = docs || [];
-    const sigList = sigs || [];
-
-    // Stats
+    const docList = docs || [], sigList = sigs || [];
     const sigsByDoc = {};
     sigList.forEach(s => { sigsByDoc[s.document_id] = (sigsByDoc[s.document_id] || 0) + 1; });
+
     document.getElementById('stat-docs').textContent = docList.length;
     document.getElementById('stat-signed').textContent = sigList.length;
-    document.getElementById('stat-pending').textContent = '—';
+    document.getElementById('stat-pending').textContent = docList.length > 0 ? '?' : '0';
     document.getElementById('stat-done').textContent = docList.filter(d => (sigsByDoc[d.id] || 0) > 0).length;
 
-    // Docs table
+    const base = window.location.origin + window.location.pathname.replace('index.html','') + 'sign.html';
     const tbody = document.getElementById('docsTableBody');
-    if (docList.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:2rem">אין מסמכים עדיין — צור מסמך חדש</td></tr>';
-    } else {
-      tbody.innerHTML = docList.map(d => {
-        const count = sigsByDoc[d.id] || 0;
-        const base = window.location.origin + window.location.pathname.replace('index.html', '') + 'sign.html';
-        return `<tr>
-          <td><div class="doc-chip">📄 ${d.title}</div></td>
-          <td style="color:var(--muted)">${new Date(d.created_at).toLocaleDateString('he-IL')}</td>
-          <td>
-            <div class="progress-wrap">
-              <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(count*20,100)}%"></div></div>
-              <span class="progress-text">${count} חתמו</span>
-            </div>
-          </td>
-          <td>
-            <button class="icon-btn" onclick="navigator.clipboard.writeText('${base}?doc=${d.id}');showToast('לינק הועתק ✓')" title="העתק לינק">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            </button>
-          </td>
-        </tr>`;
-      }).join('');
-    }
+    tbody.innerHTML = docList.length === 0
+      ? '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:2rem">אין מסמכים עדיין</td></tr>'
+      : docList.map(d => {
+          const count = sigsByDoc[d.id] || 0;
+          return `<tr>
+            <td><div class="doc-chip">📄 ${d.title}</div></td>
+            <td style="color:var(--muted)">${new Date(d.created_at).toLocaleDateString('he-IL')}</td>
+            <td><div class="progress-wrap"><div class="progress-bar"><div class="progress-fill" style="width:${Math.min(count*20,100)}%"></div></div><span style="font-size:12px;color:var(--muted)">${count} חתמו</span></div></td>
+            <td>
+              <button class="icon-btn" onclick="copyDocLink('${base}?doc=${d.id}')" title="העתק לינק">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              </button>
+            </td>
+          </tr>`;
+        }).join('');
 
-    // Sigs table
+    const docMap = {};
+    docList.forEach(d => docMap[d.id] = d.title);
     const stbody = document.getElementById('sigsTableBody');
-    if (sigList.length === 0) {
-      stbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:2rem">אין חתימות עדיין</td></tr>';
-    } else {
-      const docMap = {};
-      docList.forEach(d => docMap[d.id] = d.title);
-      stbody.innerHTML = sigList.slice(0, 20).map(s => `<tr>
-        <td style="font-weight:500">${s.signer_name}</td>
-        <td style="color:var(--muted)">${docMap[s.document_id] || '—'}</td>
-        <td style="color:var(--muted)">${new Date(s.signed_at).toLocaleString('he-IL')}</td>
-        <td><span class="badge signed">✓ חתם</span></td>
-        <td>
-          <button class="icon-btn" onclick="downloadSignedPDF('${s.id}')" title="הורד PDF חתום">
+    stbody.innerHTML = sigList.length === 0
+      ? '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:2rem">אין חתימות עדיין</td></tr>'
+      : sigList.slice(0,20).map(s => `<tr>
+          <td style="font-weight:500">${s.signer_name}</td>
+          <td style="color:var(--muted)">${docMap[s.document_id] || '—'}</td>
+          <td style="color:var(--muted)">${new Date(s.signed_at).toLocaleString('he-IL')}</td>
+          <td><span class="badge signed">✓ חתם</span></td>
+          <td><button class="icon-btn" onclick="downloadSignedPDF('${s.id}','${docMap[s.document_id]||''}','${s.signer_name}')" title="הורד PDF">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          </button>
-        </td>
-      </tr>`).join('');
-    }
-  } catch(e) {
-    console.error(e);
-  }
+          </button></td>
+        </tr>`).join('');
+  } catch(e) { console.error(e); }
 }
 
 async function loadAllDocs() {
@@ -570,24 +407,22 @@ async function loadAllDocs() {
   const { data: sigs } = await supabase.from('signatures').select('document_id');
   const sigsByDoc = {};
   (sigs||[]).forEach(s => { sigsByDoc[s.document_id] = (sigsByDoc[s.document_id] || 0) + 1; });
-  const base = window.location.origin + window.location.pathname.replace('index.html', '') + 'sign.html';
-  const tbody = document.getElementById('allDocsBody');
-  tbody.innerHTML = (docs||[]).map(d => `<tr>
+  const base = window.location.origin + window.location.pathname.replace('index.html','') + 'sign.html';
+  document.getElementById('allDocsBody').innerHTML = (docs||[]).map(d => `<tr>
     <td><div class="doc-chip">📄 ${d.title}</div></td>
     <td style="color:var(--muted)">${new Date(d.created_at).toLocaleDateString('he-IL')}</td>
     <td>${sigsByDoc[d.id] || 0} חתימות</td>
-    <td>
-      <button class="btn" style="font-size:12px;padding:5px 10px;" onclick="navigator.clipboard.writeText('${base}?doc=${d.id}');showToast('הועתק ✓')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        העתק לינק
-      </button>
-    </td>
+    <td><button class="btn" style="font-size:12px;padding:5px 10px;" onclick="copyDocLink('${base}?doc=${d.id}')">העתק לינק</button></td>
   </tr>`).join('');
+}
+
+function copyDocLink(url) {
+  navigator.clipboard.writeText(url);
+  showToast('לינק הועתק ✓');
 }
 
 function refreshData() { loadDashboard(); showToast('מרענן...'); }
 
-// File upload
 let selectedFile = null;
 function handleFileSelect(input) {
   selectedFile = input.files[0];
@@ -599,7 +434,7 @@ function handleFileSelect(input) {
 }
 
 async function uploadAndCreate() {
-  if (!supabase) { showToast('יש לקנפג Supabase תחילה'); return; }
+  if (!supabase) { showToast('יש לקנפג Supabase תחילה'); showPage('settings'); return; }
   if (!selectedFile) { showToast('בחר קובץ PDF'); return; }
   const title = document.getElementById('docTitle').value.trim();
   if (!title) { showToast('הזן שם למסמך'); return; }
@@ -607,12 +442,11 @@ async function uploadAndCreate() {
   btn.textContent = 'מעלה...'; btn.disabled = true;
   try {
     const fileName = `${Date.now()}_${selectedFile.name}`;
-    const { data: upData, error: upErr } = await supabase.storage.from('documents').upload(fileName, selectedFile);
+    const { error: upErr } = await supabase.storage.from('documents').upload(fileName, selectedFile);
     if (upErr) throw upErr;
     const { data: urlData } = supabase.storage.from('documents').getPublicUrl(fileName);
-    const pdfUrl = urlData.publicUrl;
     const { data: doc, error: docErr } = await supabase.from('documents').insert({
-      title, description: document.getElementById('docDesc').value.trim(), pdf_url: pdfUrl
+      title, description: document.getElementById('docDesc').value.trim(), pdf_url: urlData.publicUrl
     }).select().single();
     if (docErr) throw docErr;
     const base = window.location.origin + window.location.pathname.replace('index.html','') + 'sign.html';
@@ -620,9 +454,7 @@ async function uploadAndCreate() {
     document.getElementById('signLink').textContent = link;
     document.getElementById('linkCard').style.display = 'block';
     showToast('מסמך נוצר בהצלחה ✓');
-  } catch(e) {
-    showToast('שגיאה: ' + e.message);
-  }
+  } catch(e) { showToast('שגיאה: ' + e.message); }
   btn.textContent = 'צור מסמך וקבל לינק'; btn.disabled = false;
 }
 
@@ -631,9 +463,7 @@ function copyLink() {
   showToast('לינק הועתק ✓');
 }
 
-// Download signed PDF
-async function downloadSignedPDF(sigId) {
-  if (!supabase) return;
+async function downloadSignedPDF(sigId, docTitle, signerName) {
   showToast('מכין PDF...');
   try {
     const { data: sig } = await supabase.from('signatures').select('*, documents(pdf_url, title)').eq('id', sigId).single();
@@ -641,23 +471,19 @@ async function downloadSignedPDF(sigId) {
     const pdfDoc = await PDFLib.PDFDocument.load(pdfBytes);
     const pages = pdfDoc.getPages();
     const lastPage = pages[pages.length - 1];
-    const { width, height } = lastPage.getSize();
     const sigImg = await pdfDoc.embedPng(sig.signature_data);
     lastPage.drawImage(sigImg, { x: 50, y: 50, width: 160, height: 60 });
-    lastPage.drawText(`חתם: ${sig.signer_name}  |  ${new Date(sig.signed_at).toLocaleDateString('he-IL')}`, {
-      x: 50, y: 120, size: 10
-    });
-    const pdfBytesOut = await pdfDoc.save();
-    const blob = new Blob([pdfBytesOut], { type: 'application/pdf' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url;
+    lastPage.drawText(`חתם: ${sig.signer_name}  |  ${new Date(sig.signed_at).toLocaleDateString('he-IL')}`, { x: 50, y: 120, size: 10 });
+    const out = await pdfDoc.save();
+    const blob = new Blob([out], { type: 'application/pdf' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
     a.download = `${sig.documents.title}_${sig.signer_name}_חתום.pdf`;
     a.click();
     showToast('PDF הורד ✓');
   } catch(e) { showToast('שגיאה בהורדה'); console.error(e); }
 }
 
-// Toast
 function showToast(msg) {
   document.getElementById('toastMsg').textContent = msg;
   const t = document.getElementById('toast');
