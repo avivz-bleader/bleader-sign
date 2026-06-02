@@ -297,6 +297,19 @@ async function renderSignPage(pageNum) {
       if (initVal) fieldValues[idx] = initVal;
       input.addEventListener('input', () => { fieldValues[idx] = input.value; });
       fieldWrap.appendChild(input);
+    } else if (f.type === 'custom') {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'field-input-name';
+      input.style.borderColor = '#F5A623';
+      input.style.background = 'rgba(255,240,200,0.9)';
+      input.placeholder = f.label || 'מלא כאן';
+      input.dataset.fieldIdx = idx;
+      const initVal = fieldValues[idx] || '';
+      input.value = initVal;
+      if (initVal) fieldValues[idx] = initVal;
+      input.addEventListener('input', () => { fieldValues[idx] = input.value; });
+      fieldWrap.appendChild(input);
     } else {
       const box = document.createElement('div');
       box.className = 'field-sig-box' + (fieldValues[idx] ? ' signed' : '');
@@ -329,7 +342,7 @@ async function nextSignPage() { if (currentSignPage < totalSignPages) await rend
 
 function goToStep3() {
   // Save all visible name field values
-  document.querySelectorAll('.field-input-name').forEach(input => {
+  document.querySelectorAll('.field-input-name, input[data-field-idx]').forEach(input => {
     const idx = parseInt(input.dataset.fieldIdx);
     if (!isNaN(idx)) fieldValues[idx] = input.value;
   });
@@ -339,12 +352,16 @@ function goToStep3() {
   const nameFields = docData.fieldsArr.filter(f => f.type === 'name');
   const sigFields = docData.fieldsArr.filter(f => f.type === 'signature');
   let html = '';
-  nameFields.forEach((f, i) => {
+  const allInputFields = docData.fieldsArr.filter(f => f.type === 'name' || f.type === 'custom');
+  allInputFields.forEach((f) => {
     const idx = docData.fieldsArr.indexOf(f);
-    const val = fieldValues[idx] || document.getElementById('signerName').value;
+    const val = f.type === 'name' ? (fieldValues[idx] || document.getElementById('signerName').value) : (fieldValues[idx] || '');
+    const icon = f.type === 'name' ? '✏️' : '📝';
+    const lbl = f.type === 'name' ? 'שם' : (f.label || 'שדה');
     html += `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface2);border-radius:10px;margin-bottom:8px;font-size:13px;">
-      <span>✏️</span><span style="color:var(--muted)">שם (עמוד ${f.page}):</span><strong>${val || '—'}</strong></div>`;
+      <span>${icon}</span><span style="color:var(--muted)">${lbl} (עמוד ${f.page}):</span><strong>${val || '—'}</strong></div>`;
   });
+  nameFields.forEach((f, i) => { }); // kept for compatibility
   sigFields.forEach((f, i) => {
     const idx = docData.fieldsArr.indexOf(f);
     const val = fieldValues[idx];
