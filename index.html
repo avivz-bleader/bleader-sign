@@ -81,6 +81,7 @@ input:focus{outline:none;border-color:var(--purple);}
 .placed-field{position:absolute;border:2px dashed;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;cursor:move;user-select:none;}
 .placed-field.name{border-color:#6B21E8;background:rgba(107,33,232,0.15);color:#6B21E8;}
 .placed-field.signature{border-color:#E040A0;background:rgba(224,64,160,0.15);color:#E040A0;}
+.placed-field.custom{border-color:#F5A623;background:rgba(245,166,35,0.15);color:#F5A623;}
 .placed-field .del-btn{position:absolute;top:-8px;left:-8px;width:18px;height:18px;border-radius:50%;background:#E040A0;color:white;border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;line-height:1;}
 .field-toolbar{display:flex;gap:8px;margin-bottom:1rem;align-items:center;flex-wrap:wrap;}
 .field-btn{padding:8px 16px;border-radius:8px;border:1.5px dashed;background:transparent;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all 0.2s;}
@@ -199,6 +200,7 @@ pre{background:var(--surface2);border-radius:10px;padding:1rem;font-size:11px;ov
             <button class="field-btn none" id="toolNone" onclick="setTool('none')">🖱️ סמן</button>
             <button class="field-btn name" id="toolName" onclick="setTool('name')">✏️ הוסף שדה שם</button>
             <button class="field-btn sig" id="toolSig" onclick="setTool('sig')">✍️ הוסף שדה חתימה</button>
+            <button class="field-btn" id="toolCustom" onclick="addCustomField()" style="border-color:#F5A623;color:#F5A623;">📝 שדה מותאם</button>
             <span style="font-size:12px;color:var(--muted);margin-right:auto" id="fieldCount">0 שדות</span>
           </div>
 
@@ -317,6 +319,20 @@ let activeTool = 'none';
 let selectedFile = null;
 let pdfScale = 1;
 
+function addCustomField() {
+  const label = prompt('שם השדה (לדוגמה: ת.ז, תפקיד, תאריך):');
+  if (!label) return;
+  // Add in center of current view
+  const canvas = document.getElementById('pdfCanvas');
+  if (!canvas) return;
+  fields.push({
+    type: 'custom', label: label, page: currentPage,
+    xPct: 0.1, yPct: 0.45, wPct: 0.35, hPct: 0.05
+  });
+  renderFields();
+  showToast('שדה "' + label + '" נוסף — גרור למקום הנכון');
+}
+
 function setTool(t) {
   activeTool = t;
   ['none','name','sig'].forEach(x => document.getElementById('tool' + x.charAt(0).toUpperCase() + x.slice(1))?.classList.remove('active'));
@@ -370,7 +386,8 @@ function renderFields() {
     el.style.top = (f.yPct * canvas.height) + 'px';
     el.style.width = (f.wPct * canvas.width) + 'px';
     el.style.height = (f.hPct * canvas.height) + 'px';
-    el.innerHTML = `<span>${f.type === 'name' ? '✏️ שם' : '✍️ חתימה'}</span><button class="del-btn" onclick="deleteField(${globalIdx})">✕</button>`;
+    const label = f.type === 'name' ? '✏️ שם' : f.type === 'signature' ? '✍️ חתימה' : ('📝 ' + (f.label || 'שדה'));
+    el.innerHTML = `<span>${label}</span><button class="del-btn" onclick="deleteField(${globalIdx})">✕</button>`;
     makeDraggable(el, globalIdx, canvas);
     overlay.appendChild(el);
   });
@@ -556,11 +573,11 @@ async function downloadSignedPDF(sigId) {
       const ctx = canvas.getContext('2d');
       await page.render({ canvasContext: ctx, viewport }).promise;
 
-      // Draw name fields on this page
-      const nameFields = docFields.filter(f => f.type === 'name' && f.page === p);
-      nameFields.forEach(f => {
+      // Draw text fields (name + custom) on this page
+      const textFields = docFields.filter(f => (f.type === 'name' || f.type === 'custom') && f.page === p);
+      textFields.forEach(f => {
         const idx = docFields.indexOf(f);
-        const val = fieldValues[idx] || sig.signer_name || '';
+        const val = f.type === 'name' ? (fieldValues[idx] || sig.signer_name || '') : (fieldValues[idx] || '');
         if (!val) return;
         const x = f.xPct * canvas.width;
         const y = f.yPct * canvas.height;
