@@ -78,6 +78,14 @@ input[type=text]::placeholder{color:var(--muted);}
 @keyframes spin{to{transform:rotate(360deg);}}
 .confirm-row{display:flex;align-items:flex-start;gap:12px;padding:14px;background:var(--surface2);border-radius:12px;margin-bottom:1.5rem;cursor:pointer;}
 .confirm-row input[type=checkbox]{width:18px;height:18px;flex-shrink:0;margin-top:1px;accent-color:var(--purple);}
+.fs-modal{position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:200;display:flex;flex-direction:column;}
+.fs-toolbar{padding:10px 16px;display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,0.8);flex-shrink:0;}
+.fs-close{background:none;border:1px solid rgba(255,255,255,0.3);color:white;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px;}
+.fs-body{flex:1;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:1rem;gap:1rem;}
+.fs-page{position:relative;background:white;border-radius:4px;flex-shrink:0;}
+.fs-page canvas{display:block;}
+.fs-nav{display:flex;gap:8px;align-items:center;color:white;font-size:13px;}
+.fs-nav button{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);color:white;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px;}
 .confirm-row span{font-size:13px;color:var(--muted);line-height:1.5;}
 </style>
 </head>
@@ -124,10 +132,11 @@ input[type=text]::placeholder{color:var(--muted);}
       <div class="card-title" id="step2Title">מילוי וחתימה</div>
       <div class="card-sub">מלא את השדות המסומנים ישירות על המסמך</div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:0.75rem;">
-        <button onclick="changeZoom(-0.2)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;">−</button>
-        <span id="zoomLabel" style="font-size:12px;color:var(--muted);min-width:40px;text-align:center;">100%</span>
-        <button onclick="changeZoom(0.2)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;">+</button>
-        <span style="font-size:11px;color:var(--muted);margin-right:8px">הגדל/הקטן מסמך</span>
+        <button onclick="openFullscreen()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:6px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+          הצג מסמך במסך מלא
+        </button>
+        <span style="font-size:11px;color:var(--muted)">לחץ לצפייה מלאה לפני מילוי</span>
       </div>
       <div class="page-nav-bar" id="pageNavBar" style="display:none">
         <button onclick="prevSignPage()">→ קודם</button>
@@ -166,6 +175,20 @@ input[type=text]::placeholder{color:var(--muted);}
   </div>
 </div>
 
+<!-- Fullscreen Modal -->
+<div class="fs-modal" id="fsModal" style="display:none">
+  <div class="fs-toolbar">
+    <div class="fs-nav">
+      <button onclick="fsPrev()">→ קודם</button>
+      <span id="fsPageLabel">עמוד 1 מתוך 1</span>
+      <button onclick="fsNext()">הבא ←</button>
+    </div>
+    <span style="color:white;font-size:13px;font-weight:600" id="fsDocTitle"></span>
+    <button class="fs-close" onclick="closeFullscreen()">✕ סגור</button>
+  </div>
+  <div class="fs-body" id="fsBody"></div>
+</div>
+
 <!-- Signature Modal -->
 <div class="sig-modal-bg" id="sigModal" style="display:none">
   <div class="sig-modal">
@@ -189,7 +212,6 @@ const sbUrl = 'https://xdtbdqmcyovsotourbwl.supabase.co';
 const sbKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhkdGJkcW1jeW92c290b3VyYndsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMTIyMjQsImV4cCI6MjA5NTg4ODIyNH0.4vMg1fRPdYXNSiGf1Q1RgpLGtFtkK9JSwBIwopWIEvM';
 let sbClient, docData, pdfJsDoc;
 let fieldValues = {};
-let zoomLevel = 1.0;
 let currentSignPage = 1, totalSignPages = 1;
 let activeFieldIdx = null;
 
@@ -240,12 +262,6 @@ function checkStep1() {
   document.getElementById('step1Btn').disabled = document.getElementById('signerName').value.trim().length < 2;
 }
 
-function changeZoom(delta) {
-  zoomLevel = Math.max(0.5, Math.min(3.0, zoomLevel + delta));
-  document.getElementById("zoomLabel").textContent = Math.round(zoomLevel * 100) + "%";
-  renderSignPage(currentSignPage);
-}
-
 async function goToStep2() {
   setStep(2); showScreen('step2');
   if (totalSignPages > 1) document.getElementById('pageNavBar').style.display = 'flex';
@@ -261,9 +277,7 @@ async function renderSignPage(pageNum) {
   const container = document.getElementById('pdfPagesContainer');
   container.innerHTML = '';
   const page = await pdfJsDoc.getPage(pageNum);
-  const baseW = container.clientWidth || 600;
-  const maxW = baseW * zoomLevel;
-  container.style.overflowX = zoomLevel > 1 ? "auto" : "hidden";
+  const maxW = container.clientWidth || 600;
   const viewport = page.getViewport({ scale: 1 });
   const scale = maxW / viewport.width;
   const scaledViewport = page.getViewport({ scale });
@@ -376,6 +390,37 @@ function goToStep3() {
 function checkStep3() {
   document.getElementById('submitBtn').disabled = !document.getElementById('confirmCheck').checked;
 }
+
+let fsCurrentPage = 1;
+async function openFullscreen() {
+  const modal = document.getElementById('fsModal');
+  modal.style.display = 'flex';
+  document.getElementById('fsDocTitle').textContent = docData.title || '';
+  fsCurrentPage = 1;
+  await fsRenderPage(fsCurrentPage);
+}
+function closeFullscreen() { document.getElementById('fsModal').style.display = 'none'; }
+async function fsRenderPage(p) {
+  fsCurrentPage = p;
+  const body = document.getElementById('fsBody');
+  body.innerHTML = '';
+  const page = await pdfJsDoc.getPage(p);
+  const vw = Math.min(window.innerWidth - 32, 900);
+  const viewport = page.getViewport({ scale: 1 });
+  const scale = vw / viewport.width;
+  const sv = page.getViewport({ scale });
+  const canvas = document.createElement('canvas');
+  canvas.width = sv.width; canvas.height = sv.height;
+  const wrap = document.createElement('div');
+  wrap.className = 'fs-page';
+  wrap.style.width = sv.width + 'px';
+  wrap.appendChild(canvas);
+  body.appendChild(wrap);
+  await page.render({ canvasContext: canvas.getContext('2d'), viewport: sv }).promise;
+  document.getElementById('fsPageLabel').textContent = `עמוד ${p} מתוך ${totalSignPages}`;
+}
+async function fsPrev() { if (fsCurrentPage > 1) await fsRenderPage(fsCurrentPage - 1); }
+async function fsNext() { if (fsCurrentPage < totalSignPages) await fsRenderPage(fsCurrentPage + 1); }
 
 async function submitSignature() {
   const name = document.getElementById('signerName').value.trim();
