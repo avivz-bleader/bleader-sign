@@ -179,8 +179,8 @@ input[type=text]::placeholder{color:var(--muted);}
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-const sbUrl = localStorage.getItem('sb_url');
-const sbKey = localStorage.getItem('sb_key');
+const sbUrl = 'https://xdtbdqmcyovsotourbwl.supabase.co';
+const sbKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhkdGJkcW1jeW92c290b3VyYndsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMTIyMjQsImV4cCI6MjA5NTg4ODIyNH0.4vMg1fRPdYXNSiGf1Q1RgpLGtFtkK9JSwBIwopWIEvM';
 let sbClient, docData, pdfJsDoc;
 let fieldValues = {}; // fieldIndex -> value (text or dataURL)
 let currentSignPage = 1, totalSignPages = 1;
