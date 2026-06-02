@@ -405,15 +405,22 @@ async function fsRenderPage(p) {
   const body = document.getElementById('fsBody');
   body.innerHTML = '';
   const page = await pdfJsDoc.getPage(p);
+  // Render at high resolution (2x pixel ratio) then display smaller
   const vw = Math.min(window.innerWidth - 32, 900);
   const viewport = page.getViewport({ scale: 1 });
-  const scale = vw / viewport.width;
-  const sv = page.getViewport({ scale });
+  const displayScale = vw / viewport.width;
+  const pixelRatio = window.devicePixelRatio || 1;
+  const renderScale = displayScale * pixelRatio;
+  const sv = page.getViewport({ scale: renderScale });
   const canvas = document.createElement('canvas');
-  canvas.width = sv.width; canvas.height = sv.height;
+  canvas.width = sv.width;
+  canvas.height = sv.height;
+  // Display at logical size (CSS pixels)
+  canvas.style.width = (sv.width / pixelRatio) + 'px';
+  canvas.style.height = (sv.height / pixelRatio) + 'px';
   const wrap = document.createElement('div');
   wrap.className = 'fs-page';
-  wrap.style.width = sv.width + 'px';
+  wrap.style.width = (sv.width / pixelRatio) + 'px';
   wrap.appendChild(canvas);
   body.appendChild(wrap);
   await page.render({ canvasContext: canvas.getContext('2d'), viewport: sv }).promise;
