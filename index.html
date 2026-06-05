@@ -541,7 +541,7 @@ async function loadDashboard() {
     docList.forEach(d => docMap[d.id] = d.title);
     document.getElementById('sigsTableBody').innerHTML = sigList.length === 0
       ? '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:2rem">אין חתימות עדיין</td></tr>'
-      : sigList.slice(0,20).map(s => `<tr>
+      : sigList.map(s => `<tr>
           <td style="font-weight:500">${s.signer_name}</td>
           <td style="color:var(--muted)">${docMap[s.document_id]||'—'}</td>
           <td style="color:var(--muted)">${new Date(s.signed_at).toLocaleString('he-IL')}</td>
